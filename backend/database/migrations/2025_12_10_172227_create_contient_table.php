@@ -15,10 +15,9 @@ return new class extends Migration
             $table->integer('idContient', true);
             $table->integer('idF')->index('idx_contient_filiere');
             $table->integer('idM')->index('idx_contient_module');
-            $table->enum('semestre', ['S1', 'S2', 'S3', 'S4', 'S5', 'S6']);
-            $table->decimal('coefficient', 3)->nullable()->default(1);
 
-            $table->unique(['idF', 'idM', 'semestre'], 'filiere_module_semestre');
+            // Supprimer la contrainte unique car elle contenait "semestre"
+            $table->unique(['idF', 'idM'], 'filiere_module');
         });
     }
 

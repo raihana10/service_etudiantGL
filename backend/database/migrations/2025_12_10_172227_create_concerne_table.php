@@ -17,10 +17,9 @@ return new class extends Migration
             $table->integer('idEtudiant')->index('idx_concerne_etudiant');
             $table->string('annee', 20);
             $table->decimal('note', 5)->nullable();
-            $table->date('dateExamen')->nullable();
-            $table->enum('session', ['Normale', 'Rattrapage'])->nullable()->default('Normale');
 
-            $table->unique(['idEtudiant', 'idContient', 'annee', 'session'], 'etudiant_contient_annee_session');
+            // Retirer la contrainte unique car elle contenait "session"
+            $table->unique(['idEtudiant', 'idContient', 'annee'], 'etudiant_contient_annee');
         });
     }
 

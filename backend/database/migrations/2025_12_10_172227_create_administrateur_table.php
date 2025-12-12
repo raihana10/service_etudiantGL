@@ -15,6 +15,7 @@ return new class extends Migration
             $table->integer('idAdmin', true);
             $table->string('email', 100)->unique('email');
             $table->string('motDePasse');
+            $table->timestamp('created_at')->useCurrent();
         });
     }
 

@@ -2,6 +2,9 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\TestController;
+use App\Http\Controllers\Api\EtudiantController;
 
-Route::get('/test', [TestController::class, 'testConnection']);
+Route::prefix('etudiant')->group(function () {
+    Route::post('/verifier', [EtudiantController::class, 'verifier']);
+    Route::post('/demande', [EtudiantController::class, 'creerDemande']);
+});

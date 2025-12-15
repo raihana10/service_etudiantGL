@@ -9,6 +9,8 @@ class ReleveNote extends Model
 {
     use HasFactory;
 
+    public $timestamps = false; // Désactiver created_at et updated_at
+
     protected $table = 'relevenote';
     protected $primaryKey = 'idRN';
     public $incrementing = true;

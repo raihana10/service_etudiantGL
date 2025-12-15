@@ -9,6 +9,8 @@ class AttestationReussite extends Model
 {
     use HasFactory;
 
+    public $timestamps = false; // Désactiver created_at et updated_at
+
     protected $table = 'attestationreussite';
     protected $primaryKey = 'idAR';
     public $incrementing = true;

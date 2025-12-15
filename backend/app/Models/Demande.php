@@ -9,6 +9,8 @@ class Demande extends Model
 {
     use HasFactory;
 
+    public $timestamps = false; // Désactiver created_at et updated_at
+
     protected $table = 'demande';
     protected $primaryKey = 'idDemande';
     public $incrementing = true;
@@ -22,6 +24,7 @@ class Demande extends Model
         'statut',
         'motif_refus',
         'date_traitement',
+        'num_demande',
     ];
 
     protected $casts = [

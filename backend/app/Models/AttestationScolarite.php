@@ -9,6 +9,8 @@ class AttestationScolarite extends Model
 {
     use HasFactory;
 
+    public $timestamps = false; // Désactiver created_at et updated_at
+
     protected $table = 'attestationscolarite';
     protected $primaryKey = 'idAS';
     public $incrementing = true;
@@ -16,12 +18,10 @@ class AttestationScolarite extends Model
 
     protected $fillable = [
         'idDemande',
-        'nbrExemplaire',
     ];
 
     protected $casts = [
         'idDemande' => 'integer',
-        'nbrExemplaire' => 'integer',
     ];
 
     public function demande()

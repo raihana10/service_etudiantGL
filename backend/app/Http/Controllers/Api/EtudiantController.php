@@ -261,8 +261,7 @@ class EtudiantController extends Controller
                 
                 $releveNote = ReleveNote::create([
                     'idDemande' => $demande->idDemande,
-                    'annee' => $request->informations['annee_universitaire'] ?? null,
-                    'semestre' => $request->informations['semestre'] ?? null
+                    'annee' => $request->informations['annee_universitaire'] ?? null
                 ]);
 
                 \Log::info('Relevé de notes créé avec succès: ' . json_encode($releveNote));

@@ -1,0 +1,764 @@
+<?php
+
+namespace App\Http\Controllers\Api\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Demande;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+
+class DemandesController extends Controller
+{
+    /**
+     * Obtenir toutes les demandes avec filtres et pagination
+     */
+    public function index(Request $request)
+    {
+        try {
+            $query = Demande::with(['etudiant', 'administrateur']);
+
+            // Filtrage par statut
+            if ($request->has('statut') && $request->statut !== 'tous') {
+                $statutMapping = [
+                    'en_attente' => 'En attente',
+                    'acceptee' => 'Validée',
+                    'refusee' => 'Refusée'
+                ];
+                $query->where('statut', $statutMapping[$request->statut] ?? $request->statut);
+            }
+
+            // Filtrage par type de document
+            if ($request->has('typeDoc') && $request->typeDoc !== 'toutes') {
+                $typeMapping = [
+                    'attestation_scolarite' => 'AttestationScolarite',
+                    'attestation_reussite' => 'AttestationReussite',
+                    'releve_notes' => 'ReleveNote',
+                    'convention_stage' => 'ConventionStage'
+                ];
+                $query->where('typeDoc', $typeMapping[$request->typeDoc] ?? $request->typeDoc);
+            }
+
+            // Recherche par nom, prénom ou numéro apogée
+            if ($request->has('search') && $request->search) {
+                $search = $request->search;
+                $query->whereHas('etudiant', function ($q) use ($search) {
+                    $q->where('nom', 'like', "%{$search}%")
+                      ->orWhere('prenom', 'like', "%{$search}%")
+                      ->orWhere('numApogee', 'like', "%{$search}%");
+                });
+            }
+
+            // Pagination
+            $page = $request->get('page', 1);
+            $limit = $request->get('limit', 20);
+
+            $demandes = $query->orderBy('datesoumission', 'desc')
+                ->skip(($page - 1) * $limit)
+                ->take($limit)
+                ->get()
+                ->map(function ($demande) {
+                    // Récupérer les détails spécifiques selon le type
+                    $details = $this->getDemandeDetails($demande);
+
+                    return [
+                        'id' => 'DEM-' . str_pad($demande->idDemande, 3, '0', STR_PAD_LEFT),
+                        'idDemande' => $demande->idDemande,
+                        'type' => $this->mapTypeToFrontend($demande->typeDoc),
+                        'typeLabel' => $this->getTypeLabel($demande->typeDoc),
+                        'statut' => $this->mapStatutToFrontend($demande->statut),
+                        'etudiant' => $demande->etudiant ? [
+                            'nom' => $demande->etudiant->nom . ' ' . $demande->etudiant->prenom,
+                            'apogee' => $demande->etudiant->numApogee,
+                            'email' => $demande->etudiant->emailInstitu,
+                        ] : null,
+                        'date' => $demande->datesoumission->format('d/m/Y'),
+                        'details' => $details,
+                    ];
+                });
+
+            $total = $query->count();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'demandes' => $demandes,
+                    'pagination' => [
+                        'page' => $page,
+                        'limit' => $limit,
+                        'total' => $total,
+                        'pages' => ceil($total / $limit)
+                    ]
+                ]
+            ])
+            ->header('Access-Control-Allow-Origin', '*')
+            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des demandes: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Valider une demande
+     */
+    public function valider(Request $request, $idDemande)
+    {
+        try {
+            $demande = Demande::findOrFail($idDemande);
+
+            if ($demande->statut !== 'En attente') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cette demande ne peut pas être validée'
+                ], 400);
+            }
+
+            $demande->update([
+                'statut' => 'Validée',
+                'date_traitement' => now(),
+                'idAdmin' => $request->user()->id ?? 1 // TODO: gérer l'authentification admin
+            ]);
+
+            // TODO: Envoyer email à l'étudiant
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Demande validée avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la validation: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Refuser une demande
+     */
+    public function refuser(Request $request, $idDemande)
+    {
+        try {
+            $request->validate([
+                'motif_refus' => 'required|string|max:1000'
+            ]);
+
+            $demande = Demande::findOrFail($idDemande);
+
+            if ($demande->statut !== 'En attente') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cette demande ne peut pas être refusée'
+                ], 400);
+            }
+
+            $demande->update([
+                'statut' => 'Refusée',
+                'motif_refus' => $request->motif_refus,
+                'date_traitement' => now(),
+                'idAdmin' => $request->user()->id ?? 1 // TODO: gérer l'authentification admin
+            ]);
+
+            // TODO: Envoyer email à l'étudiant
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Demande refusée avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors du refus: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Prévisualiser un PDF de la demande (placeholder minimal)
+     */
+    public function preview($idDemande)
+    {
+        try {
+            // Charger relations supposées par type (ajustez les relations selon vos modèles)
+            $demande = Demande::with(['etudiant', 'attestationscolarite', 'attestationreussite', 'relevenote', 'conventionstage'])
+                ->findOrFail($idDemande);
+
+            $typeLabel = $this->getTypeLabel($demande->typeDoc);
+            $etudiantNom = $demande->etudiant ? ($demande->etudiant->nom . ' ' . $demande->etudiant->prenom) : 'Etudiant inconnu';
+            $apogee = $demande->etudiant->numApogee ?? 'N/A';
+            $email = $demande->etudiant->emailInstitu ?? 'N/A';
+            $now = now()->format('d/m/Y H:i');
+
+            // Construire des lignes selon le type
+            $lines = [];
+            $lines[] = "Previsualisation: {$typeLabel}";
+            $lines[] = "Demande #{$demande->idDemande}";
+            $lines[] = "Etudiant: {$etudiantNom}";
+            $lines[] = "Apogee: {$apogee}";
+            $lines[] = "Email: {$email}";
+            $lines[] = "Date generation: {$now}";
+
+            switch ($demande->typeDoc) {
+                case 'ReleveNote':
+                    $r = $demande->relevenote;
+                    if ($r) {
+                        $lines[] = "Type: Releve de notes";
+                        $lines[] = "Semestre: " . ($r->semestre ?? 'N/A');
+                        $lines[] = "Annee universitaire: " . ($r->anneeUniversitaire ?? 'N/A');
+                        // Ajoutez d'autres champs si existants (modules, moyennes, etc.)
+                    }
+                    break;
+                case 'AttestationScolarite':
+                    $a = $demande->attestationscolarite;
+                    if ($a) {
+                        $lines[] = "Type: Attestation de scolarite";
+                        $lines[] = "Filiere: " . ($a->filiere ?? 'N/A');
+                        $lines[] = "Nombre d'exemplaires: " . ($a->nombreExemplaires ?? '1');
+                    }
+                    break;
+                case 'AttestationReussite':
+                    $a = $demande->attestationreussite;
+                    if ($a) {
+                        $lines[] = "Type: Attestation de reussite";
+                        $lines[] = "Filiere: " . ($a->filiere ?? 'N/A');
+                        $lines[] = "Annee universitaire: " . ($a->anneeUniversitaire ?? 'N/A');
+                    }
+                    break;
+                case 'ConventionStage':
+                    $c = $demande->conventionstage;
+                    if ($c) {
+                        $lines[] = "Type: Convention de stage";
+                        $lines[] = "Entreprise: " . ($c->entreprise ?? 'N/A');
+                        $periode = ($c->dateDebut && $c->dateFin) ? $c->dateDebut->format('d/m/Y') . ' -> ' . $c->dateFin->format('d/m/Y') : 'N/A';
+                        $lines[] = "Periode: " . $periode;
+                        $lines[] = "Sujet: " . ($c->sujet ?? 'N/A');
+                    }
+                    break;
+            }
+
+            // Sanitize ASCII (remplacer accents) et échapper PDF
+            $lines = array_map(function($l){
+                $l = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $l);
+                $l = str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $l);
+                return $l;
+            }, $lines);
+
+            // Générer un PDF minimal multi-lignes
+            $pdf = "%PDF-1.4\n";
+            $pdf .= "1 0 obj <</Type /Catalog /Pages 2 0 R>> endobj\n";
+            $pdf .= "2 0 obj <</Type /Pages /Kids [3 0 R] /Count 1>> endobj\n";
+            $pdf .= "3 0 obj <</Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources <</Font <</F1 5 0 R>>>>>> endobj\n";
+            $y = 780; $leading = 18; $content = "BT /F1 12 Tf 50 $y Td ";
+            $first = true;
+            foreach ($lines as $line) {
+                if (!$first) { $content .= "0 -$leading Td "; }
+                $content .= "(" . $line . ") Tj ";
+                $first = false;
+            }
+            $content .= "ET";
+            $pdf .= "4 0 obj <</Length " . strlen($content) . ">> stream\n{$content}\nendstream endobj\n";
+            $pdf .= "5 0 obj <</Type /Font /Subtype /Type1 /BaseFont /Helvetica>> endobj\n";
+            $pdf .= "xref\n0 6\n0000000000 65535 f \ntrailer <</Size 6/Root 1 0 R>>\nstartxref\n0\n%%EOF";
+
+            return response($pdf, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Access-Control-Allow-Origin', '*');
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Impossible de générer la prévisualisation: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtenir les détails spécifiques d'une demande
+     */
+    private function getDemandeDetails($demande)
+    {
+        switch ($demande->typeDoc) {
+            case 'AttestationScolarite':
+                $detail = $demande->attestationscolarite;
+                return $detail ? [
+                    'filiere' => $detail->filiere ?? 'N/A',
+                    'nombreExemplaires' => $detail->nombreExemplaires ?? 1,
+                ] : [];
+
+            case 'AttestationReussite':
+                $detail = $demande->attestationreussite;
+                return $detail ? [
+                    'filiere' => $detail->filiere ?? 'N/A',
+                    'anneeUniversitaire' => $detail->anneeUniversitaire ?? 'N/A',
+                ] : [];
+
+            case 'ReleveNote':
+                $detail = $demande->relevenote;
+                return $detail ? [
+                    'semestre' => $detail->semestre ?? 'N/A',
+                    'anneeUniversitaire' => $detail->anneeUniversitaire ?? 'N/A',
+                ] : [];
+
+            case 'ConventionStage':
+                $detail = $demande->conventionstage;
+                return $detail ? [
+                    'entreprise' => $detail->entreprise ?? 'N/A',
+                    'periode' => ($detail->dateDebut && $detail->dateFin) ?
+                        $detail->dateDebut->format('d/m/Y') . ' → ' . $detail->dateFin->format('d/m/Y') : 'N/A',
+                    'sujet' => $detail->sujet ?? 'N/A',
+                ] : [];
+
+            default:
+                return [];
+        }
+    }
+
+    /**
+     * Mapper le type backend vers frontend
+     */
+    private function mapTypeToFrontend($type)
+    {
+        $mapping = [
+            'AttestationScolarite' => 'attestation_scolarite',
+            'AttestationReussite' => 'attestation_reussite',
+            'ReleveNote' => 'releve_notes',
+            'ConventionStage' => 'convention_stage'
+        ];
+        return $mapping[$type] ?? $type;
+    }
+
+    /**
+     * Obtenir le label du type
+     */
+    private function getTypeLabel($type)
+    {
+        $labels = [
+            'AttestationScolarite' => 'Attestation de scolarité',
+            'AttestationReussite' => 'Attestation de réussite',
+            'ReleveNote' => 'Relevé de notes',
+            'ConventionStage' => 'Convention de stage'
+        ];
+        return $labels[$type] ?? $type;
+    }
+
+    /**
+     * Prévisualiser une demande (générer HTML du document)
+     */
+    public function preview($idDemande)
+    {
+        try {
+            $demande = Demande::with(['etudiant', 'administrateur'])->findOrFail($idDemande);
+
+            $html = $this->generateDocumentHtml($demande);
+
+            return response($html)
+                ->header('Content-Type', 'text/html')
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la génération du document: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Générer le HTML du document selon le type
+     */
+    private function generateDocumentHtml($demande)
+    {
+        $etudiant = $demande->etudiant;
+        $type = $demande->typeDoc;
+
+        $template = $this->getBaseTemplate();
+
+        // Remplacer les données communes
+        $template = str_replace('[NOM ÉTUDIANT]', $etudiant->nom . ' ' . $etudiant->prenom, $template);
+        $template = str_replace('[N° APOGÉE]', $etudiant->numApogee, $template);
+        $template = str_replace('[CIN]', $etudiant->CIN ?? 'N/A', $template);
+        $template = str_replace('[DATE NAISSANCE]', $etudiant->dateNaissance ? $etudiant->dateNaissance->format('d/m/Y') : 'N/A', $template);
+        $template = str_replace('[LIEU NAISSANCE]', $etudiant->lieuNaissance ?? 'N/A', $template);
+        $template = str_replace('[DATE ACTUELLE]', now()->format('d/m/Y'), $template);
+
+        // Selon le type de document
+        switch ($type) {
+            case 'AttestationScolarite':
+                $template = $this->generateAttestationScolarite($template, $demande);
+                break;
+            case 'AttestationReussite':
+                $template = $this->generateAttestationReussite($template, $demande);
+                break;
+            case 'ConventionStage':
+                $template = $this->generateConventionStage($template, $demande);
+                break;
+            case 'ReleveNote':
+                $template = $this->generateReleveNotes($template, $demande);
+                break;
+        }
+
+        return $template;
+    }
+
+    /**
+     * Template de base HTML
+     */
+    private function getBaseTemplate()
+    {
+        return '<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Scolaire</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background: white; padding: 20px; }
+        .document { max-width: 800px; margin: 0 auto; padding: 40px; border: 2px solid #333; background: white; }
+        .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #667eea; }
+        .logo { font-size: 24px; font-weight: bold; color: #667eea; margin-bottom: 10px; }
+        .university-name { font-size: 20px; font-weight: bold; color: #333; margin-bottom: 5px; }
+        .address { font-size: 12px; color: #666; }
+        .doc-title { text-align: center; font-size: 24px; font-weight: bold; margin: 30px 0; text-decoration: underline; color: #333; }
+        .content { line-height: 1.8; font-size: 14px; color: #333; }
+        .content p { margin-bottom: 15px; }
+        .field { display: inline-block; border-bottom: 1px solid #333; min-width: 200px; padding: 0 5px; }
+        .signature-section { margin-top: 50px; display: flex; justify-content: space-between; }
+        .signature-block { text-align: center; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; font-size: 11px; color: #666; }
+        .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .table th, .table td { border: 1px solid #333; padding: 10px; text-align: left; }
+        .table th { background: #667eea; color: white; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="document">
+        <div class="header">
+            <div class="logo">🎓 UNIVERSITÉ</div>
+            <div class="university-name">UNIVERSITÉ [NOM UNIVERSITÉ]</div>
+            <div class="address">Adresse : [Adresse complète]<br>Tél : [Téléphone] | Email : [Email]</div>
+        </div>
+
+        <div class="doc-title">[TITRE DOCUMENT]</div>
+
+        <div class="content">
+            [CONTENU]
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-block">
+                <p>Fait à [Ville]</p>
+                <p>Le [DATE ACTUELLE]</p>
+            </div>
+            <div class="signature-block">
+                <p><strong>Le Directeur</strong></p>
+                <p style="margin-top: 50px;">Signature et Cachet</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            Document généré par le Service de Scolarité
+        </div>
+    </div>
+</body>
+</html>';
+    }
+
+    /**
+     * Générer Attestation de Scolarité
+     */
+    private function generateAttestationScolarite($template, $demande)
+    {
+        $etudiant = $demande->etudiant;
+        $details = $demande->attestationscolarite;
+
+        $titre = 'ATTESTATION DE SCOLARITÉ';
+        $contenu = '
+            <p><strong>Année universitaire :</strong> <span class="field">2024-2025</span></p>
+
+            <p style="margin-top: 30px;">
+                Je soussigné(e), <span class="field">[Nom du Directeur]</span>,
+                <strong>[Fonction]</strong> de l\'établissement,
+            </p>
+
+            <p style="margin-top: 20px;">Certifie que :</p>
+
+            <p style="margin-left: 30px;">
+                <strong>Nom :</strong> <span class="field">' . $etudiant->nom . '</span><br>
+                <strong>Prénom :</strong> <span class="field">' . $etudiant->prenom . '</span><br>
+                <strong>Date de naissance :</strong> <span class="field">[DATE NAISSANCE]</span><br>
+                <strong>Lieu de naissance :</strong> <span class="field">[LIEU NAISSANCE]</span><br>
+                <strong>N° Apogée :</strong> <span class="field">[N° APOGÉE]</span><br>
+                <strong>CIN :</strong> <span class="field">[CIN]</span>
+            </p>
+
+            <p style="margin-top: 20px;">
+                Est régulièrement inscrit(e) dans notre établissement pour l\'année universitaire
+                <strong>2024-2025</strong> en <span class="field">' . ($details ? $details->filiere : 'N/A') . '</span>.
+            </p>
+
+            <p style="margin-top: 30px;">
+                La présente attestation est délivrée à l\'intéressé(e) pour servir et valoir ce que de droit.
+            </p>
+        ';
+
+        $template = str_replace('[TITRE DOCUMENT]', $titre, $template);
+        $template = str_replace('[CONTENU]', $contenu, $template);
+
+        return $template;
+    }
+
+    /**
+     * Générer Attestation de Réussite
+     */
+    private function generateAttestationReussite($template, $demande)
+    {
+        $etudiant = $demande->etudiant;
+        $details = $demande->attestationreussite;
+
+        $titre = 'ATTESTATION DE RÉUSSITE';
+        $contenu = '
+            <p><strong>Année universitaire :</strong> <span class="field">' . ($details ? $details->anneeUniversitaire : '2023-2024') . '</span></p>
+
+            <p style="margin-top: 30px;">
+                Je soussigné(e), <span class="field">[Nom du Directeur]</span>,
+                <strong>[Fonction]</strong> de l\'établissement,
+            </p>
+
+            <p style="margin-top: 20px;">Atteste que :</p>
+
+            <p style="margin-left: 30px;">
+                <strong>Nom :</strong> <span class="field">' . $etudiant->nom . '</span><br>
+                <strong>Prénom :</strong> <span class="field">' . $etudiant->prenom . '</span><br>
+                <strong>Date de naissance :</strong> <span class="field">[DATE NAISSANCE]</span><br>
+                <strong>Lieu de naissance :</strong> <span class="field">[LIEU NAISSANCE]</span><br>
+                <strong>N° Apogée :</strong> <span class="field">[N° APOGÉE]</span><br>
+                <strong>CIN :</strong> <span class="field">[CIN]</span>
+            </p>
+
+            <p style="margin-top: 20px;">
+                A obtenu avec succès son diplôme de <strong><span class="field">' . ($details ? $details->filiere : 'N/A') . '</span></strong>
+                au titre de l\'année universitaire <span class="field">' . ($details ? $details->anneeUniversitaire : 'N/A') . '</span>.
+            </p>
+
+            <p style="margin-top: 20px;">
+                <strong>Mention :</strong> <span class="field">Bien</span>
+            </p>
+
+            <p style="margin-top: 30px;">
+                La présente attestation est délivrée à l\'intéressé(e) pour servir et valoir ce que de droit,
+                en attendant la délivrance du diplôme définitif.
+            </p>
+        ';
+
+        $template = str_replace('[TITRE DOCUMENT]', $titre, $template);
+        $template = str_replace('[CONTENU]', $contenu, $template);
+
+        return $template;
+    }
+
+    /**
+     * Générer Convention de Stage
+     */
+    private function generateConventionStage($template, $demande)
+    {
+        $etudiant = $demande->etudiant;
+        $details = $demande->conventionstage;
+
+        $titre = 'CONVENTION DE STAGE';
+        $contenu = '
+            <p><strong>Entre les soussignés :</strong></p>
+
+            <p style="margin-top: 20px;"><strong>L\'UNIVERSITÉ :</strong></p>
+            <p style="margin-left: 30px;">
+                Représentée par <span class="field">[Nom du Directeur]</span>, en sa qualité de Directeur
+            </p>
+
+            <p style="margin-top: 20px;"><strong>ET L\'ENTREPRISE :</strong></p>
+            <p style="margin-left: 30px;">
+                <strong>Raison sociale :</strong> <span class="field">' . ($details ? $details->entreprise : 'N/A') . '</span><br>
+                <strong>Secteur d\'activité :</strong> <span class="field">N/A</span><br>
+                <strong>Adresse :</strong> <span class="field">N/A</span><br>
+                <strong>Ville :</strong> <span class="field">N/A</span><br>
+                <strong>Téléphone :</strong> <span class="field">N/A</span><br>
+                <strong>Email :</strong> <span class="field">N/A</span><br>
+                Représentée par <span class="field">N/A</span>,
+                <span class="field">N/A</span>
+            </p>
+
+            <p style="margin-top: 20px;"><strong>CONCERNANT LE STAGIAIRE :</strong></p>
+            <p style="margin-left: 30px;">
+                <strong>Nom et Prénom :</strong> <span class="field">[NOM ÉTUDIANT]</span><br>
+                <strong>N° Apogée :</strong> <span class="field">[N° APOGÉE]</span><br>
+                <strong>Filière :</strong> <span class="field">N/A</span><br>
+                <strong>Niveau :</strong> <span class="field">N/A</span>
+            </p>
+
+            <p style="margin-top: 20px;"><strong>OBJET DU STAGE :</strong></p>
+            <p style="margin-left: 30px;">
+                <strong>Type de stage :</strong> <span class="field">N/A</span><br>
+                <strong>Sujet :</strong> <span class="field">' . ($details ? $details->sujet : 'N/A') . '</span><br>
+                <strong>Période :</strong> Du <span class="field">' . ($details && $details->dateDebut ? $details->dateDebut->format('d/m/Y') : 'N/A') . '</span>
+                au <span class="field">' . ($details && $details->dateFin ? $details->dateFin->format('d/m/Y') : 'N/A') . '</span>
+            </p>
+
+            <p style="margin-top: 20px;"><strong>ENCADREMENT :</strong></p>
+            <p style="margin-left: 30px;">
+                <strong>Encadrant académique :</strong> <span class="field">N/A</span><br>
+                <strong>Encadrant entreprise :</strong> <span class="field">N/A</span><br>
+                <strong>Fonction :</strong> <span class="field">N/A</span><br>
+                <strong>Téléphone :</strong> <span class="field">N/A</span><br>
+                <strong>Email :</strong> <span class="field">N/A</span>
+            </p>
+
+            <p style="margin-top: 30px;">
+                <strong>Article 1 :</strong> Le stagiaire s\'engage à respecter le règlement intérieur
+                de l\'entreprise et à se conformer aux directives qui lui seront données.
+            </p>
+
+            <p style="margin-top: 10px;">
+                <strong>Article 2 :</strong> L\'entreprise s\'engage à encadrer le stagiaire et à lui fournir
+                les moyens nécessaires à l\'accomplissement de sa mission.
+            </p>
+        ';
+
+        $template = str_replace('[TITRE DOCUMENT]', $titre, $template);
+        $template = str_replace('[CONTENU]', $contenu, $template);
+
+        // Modifier la section signature pour 3 signatures
+        $signatureSection = '
+        <div class="signature-section">
+            <div class="signature-block">
+                <p><strong>Le Directeur</strong></p>
+                <p style="margin-top: 50px;">Signature et Cachet</p>
+            </div>
+            <div class="signature-block">
+                <p><strong>Le Représentant</strong></p>
+                <p><strong>de l\'Entreprise</strong></p>
+                <p style="margin-top: 30px;">Signature et Cachet</p>
+            </div>
+            <div class="signature-block">
+                <p><strong>Le Stagiaire</strong></p>
+                <p style="margin-top: 50px;">Signature</p>
+            </div>
+        </div>
+        ';
+
+        $template = str_replace('<div class="signature-section">
+            <div class="signature-block">
+                <p>Fait à [Ville]</p>
+                <p>Le [DATE ACTUELLE]</p>
+            </div>
+            <div class="signature-block">
+                <p><strong>Le Directeur</strong></p>
+                <p style="margin-top: 50px;">Signature et Cachet</p>
+            </div>
+        </div>', $signatureSection, $template);
+
+        return $template;
+    }
+
+    /**
+     * Générer Relevé de Notes
+     */
+    private function generateReleveNotes($template, $demande)
+    {
+        $etudiant = $demande->etudiant;
+        $details = $demande->relevenote;
+
+        $titre = 'RELEVÉ DE NOTES';
+        $contenu = '
+            <p>
+                <strong>Année universitaire :</strong> <span class="field">' . ($details ? $details->anneeUniversitaire : '2023-2024') . '</span> |
+                <strong>Semestre :</strong> <span class="field">' . ($details ? $details->semestre : 'S6') . '</span>
+            </p>
+
+            <p style="margin-top: 20px;">
+                <strong>Nom :</strong> <span class="field">' . $etudiant->nom . '</span><br>
+                <strong>Prénom :</strong> <span class="field">' . $etudiant->prenom . '</span><br>
+                <strong>N° Apogée :</strong> <span class="field">[N° APOGÉE]</span><br>
+                <strong>CIN :</strong> <span class="field">[CIN]</span><br>
+                <strong>Filière :</strong> <span class="field">N/A</span><br>
+                <strong>Niveau :</strong> <span class="field">N/A</span>
+            </p>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Module</th>
+                        <th>Note</th>
+                        <th>Résultat</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>INFO101</td>
+                        <td>Programmation C</td>
+                        <td>15.50</td>
+                        <td>Validé</td>
+                    </tr>
+                    <tr>
+                        <td>INFO102</td>
+                        <td>Algorithmes et Structures de Données</td>
+                        <td>14.00</td>
+                        <td>Validé</td>
+                    </tr>
+                    <tr>
+                        <td>INFO201</td>
+                        <td>Bases de Données</td>
+                        <td>16.25</td>
+                        <td>Validé</td>
+                    </tr>
+                    <tr>
+                        <td>MATH101</td>
+                        <td>Analyse Mathématique</td>
+                        <td>13.75</td>
+                        <td>Validé</td>
+                    </tr>
+                    <tr>
+                        <td>MATH102</td>
+                        <td>Algèbre Linéaire</td>
+                        <td>12.50</td>
+                        <td>Validé</td>
+                    </tr>
+                    <tr>
+                        <td>LANG101</td>
+                        <td>Anglais Scientifique</td>
+                        <td>15.00</td>
+                        <td>Validé</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="text-align: right;"><strong>Moyenne Générale :</strong></td>
+                        <td colspan="2"><strong>14.50 / 20</strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="text-align: right;"><strong>Résultat :</strong></td>
+                        <td colspan="2"><strong>Admis(e)</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p style="margin-top: 20px;">
+                <strong>Mention :</strong> <span class="field">Bien</span>
+            </p>
+
+            <p style="margin-top: 30px; font-size: 12px;">
+                <strong>Légende :</strong> Moyenne ≥ 10 : Validé | Moyenne < 10 : Non validé
+            </p>
+        ';
+
+        $template = str_replace('[TITRE DOCUMENT]', $titre, $template);
+        $template = str_replace('[CONTENU]', $contenu, $template);
+
+        return $template;
+    }
+}

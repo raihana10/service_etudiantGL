@@ -13,6 +13,7 @@ class Demande extends Model
     protected $primaryKey = 'idDemande';
     public $incrementing = true;
     protected $keyType = 'int';
+    public $timestamps = false; // La table n'a pas de colonnes created_at/updated_at
 
     protected $fillable = [
         'idEtudiant',
@@ -60,4 +61,6 @@ class Demande extends Model
     {
         return $this->hasOne(ReleveNote::class, 'idDemande', 'idDemande');
     }
+
+    
 }

@@ -25,6 +25,7 @@
           Gestion demandes
         </router-link>
 
+        <!-- Réclamations route not yet implemented
         <router-link
           to="/admin/reclamations"
           class="nav-link"
@@ -35,6 +36,7 @@
           </svg>
           Réclamations
         </router-link>
+        -->
 
         <router-link
           to="/admin/historique"

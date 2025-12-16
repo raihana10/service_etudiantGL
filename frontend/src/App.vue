@@ -1,11 +1,9 @@
 <script setup>
-import FormulaireEtudiant from './components/etudiant/FormulaireEtudiant.vue'
 </script>
 
 <template>
   <div>
-    <!-- Formulaire étudiant -->
-    <FormulaireEtudiant />
+    <router-view></router-view>
   </div>
 </template>
 

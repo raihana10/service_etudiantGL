@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Login from '@/components/admin/Login.vue'
 import Dashboard from '@/components/admin/Dashboard.vue'
+import DemandesList from '@/components/admin/DemandesList.vue'
 import Historique from '@/components/admin/Historique.vue'
 import Reclamations from '@/components/admin/Reclamations.vue'
 
@@ -16,6 +17,11 @@ const router = createRouter({
       path: '/admin/dashboard',
       name: 'AdminDashboard',
       component: Dashboard
+    },
+    {
+      path: '/admin/demandes',
+      name: 'AdminDemandes',
+      component: DemandesList
     },
     {
       path: '/admin/historique',

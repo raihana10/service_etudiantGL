@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\TestController;
 use App\Http\Controllers\Api\Auth\AdminLoginController;
 use App\Http\Controllers\Api\Admin\DashboardController;
 use App\Http\Controllers\Api\Admin\HistoriqueController;
+use App\Http\Controllers\Api\Admin\DemandesController;
 use App\Http\Controllers\Api\Admin\ReclamationController;
 use App\Http\Controllers\Api\Admin\TestEmailController;
 
@@ -27,6 +28,14 @@ Route::prefix('admin/historique')->group(function () {
     Route::get('/', [HistoriqueController::class, 'getHistorique']);
     Route::get('/stats', [HistoriqueController::class, 'getHistoriqueStats']);
     Route::get('/{idDemande}', [HistoriqueController::class, 'getDemandeDetails']);
+});
+
+// Demandes management routes
+Route::prefix('admin/demandes')->group(function () {
+    Route::get('/', [DemandesController::class, 'index']);
+    Route::get('/{idDemande}/preview', [DemandesController::class, 'preview']);
+    Route::post('/{idDemande}/valider', [DemandesController::class, 'valider']);
+    Route::post('/{idDemande}/refuser', [DemandesController::class, 'refuser']);
 });
 
 // Réclamations routes

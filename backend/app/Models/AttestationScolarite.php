@@ -16,12 +16,12 @@ class AttestationScolarite extends Model
 
     protected $fillable = [
         'idDemande',
-        'nbrExemplaire',
+        
     ];
 
     protected $casts = [
         'idDemande' => 'integer',
-        'nbrExemplaire' => 'integer',
+        
     ];
 
     public function demande()

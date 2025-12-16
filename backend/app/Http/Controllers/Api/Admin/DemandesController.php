@@ -65,8 +65,9 @@ class DemandesController extends Controller
                     $details = $this->getDemandeDetails($demande);
 
                     return [
-                        'id' => 'DEM-' . str_pad($demande->idDemande, 3, '0', STR_PAD_LEFT),
+                        'id' => $demande->num_demande,
                         'idDemande' => $demande->idDemande,
+                        'num_demande' => $demande->num_demande,
                         'type' => $this->mapTypeToFrontend($demande->typeDoc),
                         'typeLabel' => $this->getTypeLabel($demande->typeDoc),
                         'statut' => $this->mapStatutToFrontend($demande->statut),
@@ -109,13 +110,15 @@ class DemandesController extends Controller
     /**
      * Valider une demande
      */
-    public function valider(Request $request, $idDemande)
+    public function valider(Request $request, $num_demande)
     {
         DB::beginTransaction();
         try {
-            Log::info("Début validation demande #{$idDemande}");
+            Log::info("Début validation demande #{$num_demande}");
             
-            $demande = Demande::with(['etudiant.filiere', 'attestationscolarite', 'attestationreussite', 'relevenote', 'conventionstage'])->findOrFail($idDemande);
+            $demande = Demande::with(['etudiant.filiere', 'attestationscolarite', 'attestationreussite', 'relevenote', 'conventionstage'])
+                ->where('num_demande', $num_demande)
+                ->firstOrFail();
 
             if ($demande->statut !== 'En attente') {
                 return response()->json([
@@ -174,7 +177,7 @@ class DemandesController extends Controller
             // Générer le PDF
             $pdfContent = null;
             try {
-                Log::info("Génération du PDF pour demande #{$idDemande}");
+                Log::info("Génération du PDF pour demande #{$num_demande}");
                 $pdf = Pdf::loadView('pdf.demande', $data)->setPaper('a4');
                 $pdfContent = $pdf->output();
             } catch (\Exception $pdfError) {
@@ -188,7 +191,7 @@ class DemandesController extends Controller
             $typeLabel = $this->getTypeLabel($demande->typeDoc);
 
             // Mettre à jour la demande
-            Log::info("Mise à jour du statut pour demande #{$idDemande}");
+            Log::info("Mise à jour du statut pour demande #{$num_demande}");
             $demande->update([
                 'statut' => 'Validée',
                 'date_traitement' => now(),
@@ -197,18 +200,18 @@ class DemandesController extends Controller
             ]);
 
             DB::commit();
-            Log::info("Demande #{$idDemande} validée avec succès");
+            Log::info("Demande #{$num_demande} validée avec succès");
 
             // Envoyer l'email avec la pièce jointe PDF
             $email = optional($demande->etudiant)->emailInstitu;
             if ($email) {
                 try {
-                    Log::info("Envoi email à {$email} pour demande #{$idDemande}");
+                    Log::info("Envoi email à {$email} pour demande #{$num_demande}");
                     Mail::send([], [], function ($message) use ($email, $typeLabel, $demande, $pdfContent) {
                         $message->to($email)
                             ->subject('Votre ' . $typeLabel . ' a été validée')
-                            ->html('<p>Bonjour,</p><p>Votre ' . e($typeLabel) . ' (N° ' . e($demande->idDemande) . ') a été validée. Vous trouverez le document en pièce jointe.</p><p>Cordialement,<br>Service de Scolarité</p>')
-                            ->attachData($pdfContent, 'Demande-' . $demande->idDemande . '.pdf', ['mime' => 'application/pdf']);
+                            ->html('<p>Bonjour,</p><p>Votre ' . e($typeLabel) . ' (N° ' . e($demande->num_demande) . ') a été validée. Vous trouverez le document en pièce jointe.</p><p>Cordialement,<br>Service de Scolarité</p>')
+                            ->attachData($pdfContent, 'Demande-' . $demande->num_demande . '.pdf', ['mime' => 'application/pdf']);
                     });
                     Log::info("Email envoyé avec succès à {$email}");
                 } catch (\Exception $mailError) {
@@ -216,7 +219,7 @@ class DemandesController extends Controller
                     // Continue même si l'email échoue
                 }
             } else {
-                Log::warning("Pas d'email pour l'étudiant de la demande #{$idDemande}");
+                Log::warning("Pas d'email pour l'étudiant de la demande #{$num_demande}");
             }
 
             return response()->json([
@@ -226,7 +229,7 @@ class DemandesController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Erreur validation demande #{$idDemande}: " . $e->getMessage());
+            Log::error("Erreur validation demande #{$num_demande}: " . $e->getMessage());
             Log::error($e->getTraceAsString());
             
             return response()->json([
@@ -239,17 +242,19 @@ class DemandesController extends Controller
     /**
      * Refuser une demande
      */
-    public function refuser(Request $request, $idDemande)
+    public function refuser(Request $request, $num_demande)
     {
         DB::beginTransaction();
         try {
-            Log::info("Début refus demande #{$idDemande}");
+            Log::info("Début refus demande #{$num_demande}");
             
             $request->validate([
                 'motif_refus' => 'required|string|max:1000'
             ]);
 
-            $demande = Demande::with('etudiant')->findOrFail($idDemande);
+            $demande = Demande::with('etudiant')
+                ->where('num_demande', $num_demande)
+                ->firstOrFail();
 
             if ($demande->statut !== 'En attente') {
                 return response()->json([
@@ -258,7 +263,7 @@ class DemandesController extends Controller
                 ], 400);
             }
 
-            Log::info("Mise à jour du statut pour demande #{$idDemande}");
+            Log::info("Mise à jour du statut pour demande #{$num_demande}");
             $demande->update([
                 'statut' => 'Refusée',
                 'motif_refus' => $request->motif_refus,
@@ -267,17 +272,17 @@ class DemandesController extends Controller
             ]);
 
             DB::commit();
-            Log::info("Demande #{$idDemande} refusée avec succès");
+            Log::info("Demande #{$num_demande} refusée avec succès");
 
             $typeLabel = $this->getTypeLabel($demande->typeDoc);
             $email = optional($demande->etudiant)->emailInstitu;
             if ($email) {
                 try {
-                    Log::info("Envoi email de refus à {$email} pour demande #{$idDemande}");
+                    Log::info("Envoi email de refus à {$email} pour demande #{$num_demande}");
                     Mail::send([], [], function ($message) use ($email, $typeLabel, $demande) {
                         $message->to($email)
                             ->subject('Votre ' . $typeLabel . ' a été refusée')
-                            ->html('<p>Bonjour,</p><p>Votre ' . e($typeLabel) . ' (N° ' . e($demande->idDemande) . ') a été refusée.</p><p><strong>Motif:</strong> ' . e($demande->motif_refus) . '</p><p>Cordialement,<br>Service de Scolarité</p>');
+                            ->html('<p>Bonjour,</p><p>Votre ' . e($typeLabel) . ' (N° ' . e($demande->num_demande) . ') a été refusée.</p><p><strong>Motif:</strong> ' . e($demande->motif_refus) . '</p><p>Cordialement,<br>Service de Scolarité</p>');
                     });
                     Log::info("Email de refus envoyé avec succès à {$email}");
                 } catch (\Exception $mailError) {
@@ -285,7 +290,7 @@ class DemandesController extends Controller
                     // Continue même si l'email échoue
                 }
             } else {
-                Log::warning("Pas d'email pour l'étudiant de la demande #{$idDemande}");
+                Log::warning("Pas d'email pour l'étudiant de la demande #{$num_demande}");
             }
 
             return response()->json([
@@ -295,7 +300,7 @@ class DemandesController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Erreur refus demande #{$idDemande}: " . $e->getMessage());
+            Log::error("Erreur refus demande #{$num_demande}: " . $e->getMessage());
             Log::error($e->getTraceAsString());
             
             return response()->json([
@@ -395,10 +400,12 @@ class DemandesController extends Controller
     /**
      * Prévisualiser une demande (générer HTML du document)
      */
-    public function preview($idDemande)
+    public function preview($num_demande)
     {
         try {
-            $demande = Demande::with(['etudiant.filiere', 'attestationscolarite', 'attestationreussite', 'relevenote', 'conventionstage'])->findOrFail($idDemande);
+            $demande = Demande::with(['etudiant.filiere', 'attestationscolarite', 'attestationreussite', 'relevenote', 'conventionstage'])
+                ->where('num_demande', $num_demande)
+                ->firstOrFail();
 
             $map = [
                 'AttestationScolarite' => 'pdf.demande',

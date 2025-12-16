@@ -429,6 +429,7 @@ onMounted(() => {
 .historique-layout {
   min-height: 100vh;
   background: linear-gradient(135deg, #E3EDF2 0%, #F8FBFC 100%);
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .historique-main {
@@ -440,6 +441,8 @@ onMounted(() => {
   background: transparent;
   min-height: 100vh;
   padding: 2rem;
+  margin-left: 16rem;
+  margin-top: 104px; /* Espace pour le header fixe */
 }
 
 /* Page Header */
@@ -452,6 +455,7 @@ onMounted(() => {
   font-weight: 700;
   color: #0A0D25;
   margin-bottom: 0.5rem;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .page-subtitle {

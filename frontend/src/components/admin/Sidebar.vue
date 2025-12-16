@@ -1,6 +1,13 @@
 <template>
   <aside class="sidebar">
     <div class="sidebar-content">
+      <!-- Zone de marque/Logo -->
+      <div class="brand-section">
+        <div class="brand-rectangle">
+          <span class="brand-text">Service Étudiant</span>
+        </div>
+      </div>
+
       <!-- Navigation principale -->
       <nav class="sidebar-nav">
         <router-link
@@ -25,7 +32,6 @@
           Gestion demandes
         </router-link>
 
-        
         <router-link
           to="/admin/reclamations"
           class="nav-link"
@@ -36,7 +42,6 @@
           </svg>
           Réclamations
         </router-link>
-        
 
         <router-link
           to="/admin/historique"
@@ -81,39 +86,71 @@ const handleLogout = () => {
 <style scoped>
 .sidebar {
   width: 16rem;
-  background-color: #0A0D25;
+  background-color: #0a1929; /* Noir/bleu marine très foncé */
   min-height: 100vh;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
 }
 
 .sidebar-content {
-  padding: 1.5rem 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
+/* Zone de marque/Logo */
+.brand-section {
+  padding: 0;
+}
+
+.brand-rectangle {
+  background-color: #4E7D96; /* Même couleur que l'en-tête du dashboard */
+  padding: 2rem 1.5rem;
+  text-align: center;
+  border-bottom: 2px solid #3a6275;
+}
+
+.brand-text {
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Navigation */
 .sidebar-nav {
-  padding: 0 1rem;
-  margin-bottom: 0.5rem;
+  padding: 2rem 1rem; /* Espace vertical significatif après le rectangle bleu */
+  flex: 1;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
   padding: 0.75rem 1rem;
-  color: #d1d5db;
+  color: #b0bec5;
   border-radius: 0.5rem;
   transition: all 0.2s ease;
   text-decoration: none;
   font-weight: 500;
+  margin-bottom: 0.5rem;
 }
 
 .nav-link:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  color: #ffffff;
 }
 
 .nav-link-active {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
+  background-color: rgba(255, 255, 255, 0.15); /* Fond plus clair */
+  color: #ffffff;
+  position: relative;
+  border-left: 4px solid #4E7D96; /* Liseré de même couleur que l'en-tête */
 }
 
 .nav-icon {
@@ -127,13 +164,15 @@ const handleLogout = () => {
   transform: scale(1.1);
 }
 
+/* Séparateur */
 .nav-separator {
   border-top: 1px solid #374151;
-  margin: 1.5rem 1rem;
+  margin: 1rem 1rem;
 }
 
+/* Déconnexion */
 .logout-section {
-  padding: 0 1rem;
+  padding: 0 1rem 1rem;
 }
 
 .logout-button {
@@ -141,21 +180,40 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   padding: 0.75rem 1rem;
-  color: #f87171;
+  color: #b71c1c; /* Rouge foncé/bordeaux */
   border-radius: 0.5rem;
   transition: all 0.2s ease;
-  background: none;
-  border: none;
+  background: rgba(183, 28, 28, 0.1);
+  border: 1px solid rgba(183, 28, 28, 0.2);
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .logout-button:hover {
-  background-color: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
+  background: rgba(183, 28, 28, 0.2);
+  color: #d32f2f;
+  border-color: rgba(183, 28, 28, 0.3);
 }
 
 .logout-button:hover .nav-icon {
   transform: scale(1.1);
+  color: #d32f2f;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+  
+  .nav-link {
+    justify-content: center;
+    padding: 0.75rem;
+  }
+  
+  .nav-link-active::before {
+    display: none;
+  }
 }
 </style>

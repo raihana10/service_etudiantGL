@@ -518,7 +518,8 @@ export default {
 /* Dashboard layout */
 .dashboard-layout {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: linear-gradient(135deg, #E3EDF2 0%, #F8FBFC 100%);
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .dashboard-main {
@@ -529,6 +530,8 @@ export default {
 .dashboard-content {
   flex: 1;
   padding: 30px;
+  margin-left: 16rem;
+  margin-top: 104px; /* Espace pour le header fixe */
 }
 
 /* Loading and Error states */

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import etudiantService from '../../services/etudiant'
+import ErrorMessage from '../shared/ErrorMessage.vue'
 
 // Variables réactives
 const email = ref('')
@@ -361,6 +362,11 @@ const reinitialiserFormulaire = () => {
           <div v-if="succes" class="message succes" role="alert">
             {{ succes }}
           </div>
+        </transition>
+
+        <!-- Message d'erreur général -->
+        <transition name="fade">
+          <ErrorMessage v-if="erreur" :message="erreur" />
         </transition>
 
         <!-- Section de vérification -->

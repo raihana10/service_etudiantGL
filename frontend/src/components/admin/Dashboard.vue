@@ -24,6 +24,12 @@
 
         <!-- Dashboard content -->
         <div v-else class="dashboard-stats">
+          <!-- Header -->
+          <div class="dashboard-header">
+            <h1 class="dashboard-title">Tableau de bord</h1>
+            <p class="dashboard-subtitle">Vue d'ensemble des demandes et statistiques</p>
+          </div>
+
           <!-- Statistiques -->
           <div class="stats-grid">
             <!-- Carte Total -->
@@ -316,6 +322,8 @@ onMounted(() => {
 .dashboard-layout {
   min-height: 100vh;
   background: linear-gradient(135deg, #E3EDF2 0%, #F8FBFC 100%);
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #0A0D25;
 }
 
 .dashboard-main {
@@ -324,6 +332,8 @@ onMounted(() => {
 
 .dashboard-content {
   flex: 1;
+  margin-left: 16rem;
+  margin-top: 104px; /* Espace pour le header fixe */
   background: transparent;
   min-height: 100vh;
   padding: 2rem;
@@ -331,6 +341,28 @@ onMounted(() => {
 
 .dashboard-stats {
   width: 100%;
+}
+
+/* Header */
+.dashboard-header {
+  margin-bottom: 2rem;
+}
+
+.dashboard-title {
+  color: #0A0D25;
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 0.5rem;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.dashboard-subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+  font-weight: 400;
+  margin-bottom: 2rem;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .stats-grid {
@@ -431,15 +463,17 @@ onMounted(() => {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 0.5rem;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .stat-value {
   font-size: 2.5rem;
-  font-weight: 800;
+  font-weight: 700;
   color: #0A0D25;
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
   line-height: 1;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .stat-trend {
@@ -596,6 +630,7 @@ onMounted(() => {
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid #E3EDF2;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .chart-container {

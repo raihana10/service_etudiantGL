@@ -182,6 +182,7 @@ const handleSubmit = async () => {
   align-items: center;
   justify-content: center;
   padding: 3rem 1rem;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .login-wrapper {
@@ -278,13 +279,15 @@ const handleSubmit = async () => {
 
 .title {
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: 700;
   color: #1a202c;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .subtitle {
   color: #4a5568;
   font-weight: 500;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* Formulaire */
@@ -304,6 +307,7 @@ const handleSubmit = async () => {
   font-weight: 600;
   margin-bottom: 0.75rem;
   display: block;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .input-container {

@@ -2,20 +2,7 @@
   <nav class="navbar">
     <div class="navbar-container">
       <div class="navbar-content">
-        <!-- Logo et nom de l'app -->
-        <div class="navbar-brand">
-          <div class="brand-logo">
-            <div class="logo-container">
-              <svg class="logo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
-              </svg>
-            </div>
-            <h1 class="brand-title">Service Étudiant</h1>
-          </div>
-        </div>
-
-        <!-- Profil admin -->
+        <!-- Profil admin à droite -->
         <div class="profile-section">
           <button @click="toggleProfile" class="profile-button">
             <div class="profile-avatar">
@@ -102,64 +89,24 @@ document.addEventListener('click', (e) => {
 .navbar {
   background-color: #4E7D96;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid #0A0D25;
+  border-bottom: 2px solid #3a6275;
+  height: 88px; /* Même hauteur exacte que le rectangle de la sidebar */
+  z-index: 999;
 }
 
 .navbar-container {
-  padding: 0 1rem;
-}
-
-@media (min-width: 640px) {
-  .navbar-container {
-    padding: 0 1.5rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .navbar-container {
-    padding: 0 2rem;
-  }
+  padding: 0 2rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
 
 .navbar-content {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end; /* Aligner le contenu à droite */
   align-items: center;
-  height: 4rem;
-}
-
-.navbar-brand {
-  display: flex;
-  align-items: center;
-}
-
-.brand-logo {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.logo-container {
-  width: 2.5rem;
-  height: 2.5rem;
-  background-color: white;
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 0.75rem;
-}
-
-.logo-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: #4E7D96;
-}
-
-.brand-title {
-  color: white;
-  font-size: 1.25rem;
-  font-weight: 700;
+  width: 100%;
+  height: 100%;
 }
 
 .profile-section {
@@ -201,6 +148,7 @@ document.addEventListener('click', (e) => {
 .profile-name {
   margin-left: 0.75rem;
   font-weight: 500;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 @media (max-width: 640px) {
@@ -218,7 +166,7 @@ document.addEventListener('click', (e) => {
 .profile-dropdown {
   position: absolute;
   right: 0;
-  top: 2.5rem;
+  top: 3rem;
   width: 12rem;
   background-color: white;
   border-radius: 0.5rem;
@@ -236,39 +184,19 @@ document.addEventListener('click', (e) => {
   font-size: 0.875rem;
   font-weight: 500;
   color: #111827;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .dropdown-email {
   font-size: 0.75rem;
   color: #6b7280;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.dropdown-actions {
-  padding: 0.5rem;
-}
-
-.dropdown-item {
-  width: 100%;
-  text-align: left;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-  color: #374151;
-  border-radius: 0.375rem;
-  transition: all 0.2s ease;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.dropdown-item:hover {
-  background-color: #f9fafb;
-}
-
-.dropdown-item.logout {
-  color: #dc2626;
-}
-
-.dropdown-item.logout:hover {
-  background-color: #fef2f2;
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar {
+    margin-left: 0;
+  }
 }
 </style>

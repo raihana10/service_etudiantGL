@@ -14,6 +14,69 @@ use Illuminate\Support\Facades\Mail;
 class DemandesController extends Controller
 {
     /**
+     * Obtenir les détails d'une demande spécifique par ID
+     */
+    public function getDetails($idDemande)
+    {
+        try {
+            $demande = Demande::with(['etudiant', 'administrateur'])
+                ->where('idDemande', $idDemande)
+                ->first();
+
+            if (!$demande) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Demande non trouvée'
+                ], 404)
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'idDemande' => $demande->idDemande,
+                    'num_demande' => $demande->num_demande,
+                    'typeDoc' => $demande->typeDoc,
+                    'statut' => $demande->statut,
+                    'datesoumission' => $demande->datesoumission->toISOString(),
+                    'date_traitement' => $demande->date_traitement ? $demande->date_traitement->toISOString() : null,
+                    'motif_refus' => $demande->motif_refus,
+                    'etudiant' => $demande->etudiant ? [
+                        'idEtudiant' => $demande->etudiant->idEtudiant,
+                        'nom' => $demande->etudiant->nom,
+                        'prenom' => $demande->etudiant->prenom,
+                        'niveau' => $demande->etudiant->niveau,
+                        'CIN' => $demande->etudiant->CIN,
+                        'numApogee' => $demande->etudiant->numApogee,
+                        'emailInstitu' => $demande->etudiant->emailInstitu,
+                        'dateNaissance' => $demande->etudiant->dateNaissance ? $demande->etudiant->dateNaissance->toISOString() : null,
+                        'lieuNaissance' => $demande->etudiant->lieuNaissance
+                    ] : null,
+                    'administrateur' => $demande->administrateur ? [
+                        'idAdmin' => $demande->administrateur->idAdmin,
+                        'email' => $demande->administrateur->email
+                    ] : null
+                ]
+            ], 200)
+            ->header('Access-Control-Allow-Origin', '*')
+            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des détails de la demande',
+                'error' => $e->getMessage()
+            ], 500)
+            ->header('Access-Control-Allow-Origin', '*')
+            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+        }
+    }
+
+    /**
      * Obtenir toutes les demandes avec filtres et pagination
      */
     public function index(Request $request)

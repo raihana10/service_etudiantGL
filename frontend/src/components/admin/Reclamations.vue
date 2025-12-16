@@ -105,13 +105,6 @@
 
             <!-- Filters row -->
             <div class="filters-row">
-              <!-- Priority filter -->
-              <select v-model="currentPriority" @change="loadReclamations" class="filter-select">
-                <option value="Toutes">Toutes les priorités</option>
-                <option value="Haute">Haute priorité</option>
-                <option value="Normale">Priorité normale</option>
-                <option value="Basse">Basse priorité</option>
-              </select>
 
               <!-- Search -->
               <div class="search-container">
@@ -145,11 +138,8 @@
                 :key="reclamation.idReclamation"
                 class="reclamation-card"
               >
-                <!-- Priority and Status badges -->
+                <!-- Status badge -->
                 <div class="reclamation-badges">
-                  <span :class="['priority-badge', getPriorityClass(reclamation.priorite)]">
-                    {{ reclamation.priorite }}
-                  </span>
                   <span :class="['status-badge', getStatusClass(reclamation.statut)]">
                     {{ reclamation.statut }}
                   </span>
@@ -191,7 +181,11 @@
 
                 <!-- Action buttons -->
                 <div class="reclamation-actions">
-                  <button class="action-btn secondary-btn">
+                  <button 
+                    v-if="reclamation.demande"
+                    @click="voirDemande(reclamation.demande)"
+                    class="action-btn secondary-btn"
+                  >
                     Voir demande associée
                   </button>
                   <button 
@@ -291,6 +285,111 @@
         </div>
       </div>
     </div>
+
+    <!-- Demand Details Modal -->
+    <div v-if="showDemandModal" class="modal-overlay" @click="closeDemandModal">
+      <div class="modal-content demand-modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Détails de la demande #{{ selectedDemand?.num_demande }}</h3>
+          <button @click="closeDemandModal" class="close-btn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="modal-body" v-if="selectedDemand">
+          <!-- Informations étudiant -->
+          <div class="detail-section">
+            <h4 class="detail-title">
+              <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+              Informations étudiant
+            </h4>
+            <div class="student-card">
+              <div class="student-avatar">
+                <svg class="avatar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+              </div>
+              <div class="student-info">
+                <h5 class="student-name">{{ selectedDemand.etudiant?.nom }} {{ selectedDemand.etudiant?.prenom }}</h5>
+                <div class="student-details-grid">
+                  <div class="detail-item">
+                    <label>N° APOGEE</label>
+                    <p class="detail-value">{{ selectedDemand.etudiant?.numApogee || '-' }}</p>
+                  </div>
+                  <div class="detail-item">
+                    <label>Niveau</label>
+                    <p class="detail-value">{{ selectedDemand.etudiant?.niveau || '-' }}</p>
+                  </div>
+                  <div class="detail-item">
+                    <label>CIN</label>
+                    <p class="detail-value">{{ selectedDemand.etudiant?.CIN || '-' }}</p>
+                  </div>
+                  <div class="detail-item">
+                    <label>Email institutionnel</label>
+                    <p class="detail-value">{{ selectedDemand.etudiant?.emailInstitu || '-' }}</p>
+                  </div>
+                  <div class="detail-item">
+                    <label>Date de naissance</label>
+                    <p class="detail-value">{{ formatDate(selectedDemand.etudiant?.dateNaissance) }}</p>
+                  </div>
+                  <div class="detail-item">
+                    <label>Lieu de naissance</label>
+                    <p class="detail-value">{{ selectedDemand.etudiant?.lieuNaissance || '-' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Informations demande -->
+          <div class="detail-section">
+            <h4 class="detail-title">
+              <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              Informations demande
+            </h4>
+            <div class="demande-info-grid">
+              <div class="detail-item">
+                <label>Type de document</label>
+                <div class="type-badge" :class="getTypeClass(selectedDemand.typeDoc)">{{ getTypeLabel(selectedDemand.typeDoc) }}</div>
+              </div>
+              <div class="detail-item">
+                <label>Date de soumission</label>
+                <p class="detail-value">{{ formatDate(selectedDemand.datesoumission) }}</p>
+              </div>
+              <div class="detail-item">
+                <label>Date de traitement</label>
+                <p class="detail-value">{{ formatDate(selectedDemand.date_traitement) }}</p>
+              </div>
+              <div class="detail-item">
+                <label>Statut</label>
+                <span :class="['status-badge', getDemandStatusClass(selectedDemand.statut)]">
+                  {{ selectedDemand.statut }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Motif de refus -->
+          <div class="detail-section" v-if="selectedDemand.motif_refus">
+            <h4 class="detail-title">
+              <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Motif de refus
+            </h4>
+            <div class="refus-card">
+              <p class="motif-refus">{{ selectedDemand.motif_refus }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -317,7 +416,6 @@ export default {
         resolues: 0
       },
       currentStatus: 'Toutes',
-      currentPriority: 'Toutes',
       searchQuery: '',
       pagination: {
         current_page: 1,
@@ -334,7 +432,9 @@ export default {
       selectedReclamation: null,
       responseText: '',
       sendingResponse: false,
-      searchTimeout: null
+      searchTimeout: null,
+      showDemandModal: false,
+      selectedDemand: null
     }
   },
   mounted() {
@@ -356,9 +456,6 @@ export default {
           params.statut = this.currentStatus
         }
 
-        if (this.currentPriority !== 'Toutes') {
-          params.priorite = this.currentPriority
-        }
 
         if (this.searchQuery) {
           params.search = this.searchQuery
@@ -481,14 +578,6 @@ export default {
       }
     },
 
-    getPriorityClass(priority) {
-      const classes = {
-        'Haute': 'priority-high',
-        'Normale': 'priority-normal',
-        'Basse': 'priority-low'
-      }
-      return classes[priority] || 'priority-normal'
-    },
 
     getStatusClass(status) {
       const classes = {
@@ -509,6 +598,53 @@ export default {
         hour: '2-digit',
         minute: '2-digit'
       })
+    },
+
+    async voirDemande(demande) {
+      try {
+        const response = await api.get(`/admin/demandes/details/${demande.idDemande}`)
+        if (response.data.success) {
+          this.selectedDemand = response.data.data
+          this.showDemandModal = true
+        } else {
+          this.error = response.data.message || 'Erreur lors du chargement des détails de la demande'
+        }
+      } catch (error) {
+        console.error('Error loading demand details:', error)
+        this.error = 'Erreur lors du chargement des détails de la demande'
+      }
+    },
+
+    closeDemandModal() {
+      this.showDemandModal = false
+      this.selectedDemand = null
+    },
+
+    getTypeLabel(type) {
+      const labels = {
+        'AttestationScolarite': 'Attestation de Scolarité',
+        'AttestationReussite': 'Attestation de Réussite',
+        'ReleveNote': 'Relevé de Notes',
+        'ConventionStage': 'Convention de Stage'
+      }
+      return labels[type] || type
+    },
+
+    getTypeClass(type) {
+      return {
+        'type-attestation-scolarite': type === 'AttestationScolarite',
+        'type-attestation-reussite': type === 'AttestationReussite',
+        'type-releve-notes': type === 'ReleveNote',
+        'type-convention-stage': type === 'ConventionStage'
+      }
+    },
+
+    getDemandStatusClass(statut) {
+      return {
+        'status-valide': statut === 'Validée',
+        'status-refuse': statut === 'Refusée',
+        'status-encours': statut === 'En cours'
+      }
     }
   }
 }
@@ -518,7 +654,7 @@ export default {
 /* Dashboard layout */
 .dashboard-layout {
   min-height: 100vh;
-  background: linear-gradient(135deg, #E3EDF2 0%, #F8FBFC 100%);
+  background: #E3EDF2;
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -547,8 +683,8 @@ export default {
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #1e40af;
+  border: 4px solid #E3EDF2;
+  border-top: 4px solid #4E7D96;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 20px;
@@ -560,7 +696,7 @@ export default {
 }
 
 .retry-button {
-  background: #1e40af;
+  background: #4E7D96;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -570,7 +706,7 @@ export default {
 }
 
 .retry-button:hover {
-  background: #1d4ed8;
+  background: #3d6275;
 }
 
 /* Page header */
@@ -579,7 +715,7 @@ export default {
 }
 
 .page-header h1 {
-  color: #1f2937;
+  color: #0A0D25;
   font-size: 28px;
   margin-bottom: 8px;
 }
@@ -624,7 +760,7 @@ export default {
 .stat-value {
   font-size: 32px;
   font-weight: bold;
-  color: #1f2937;
+  color: #0A0D25;
 }
 
 .stat-icon {
@@ -637,13 +773,13 @@ export default {
 }
 
 .stat-icon-blue {
-  background: #dbeafe;
-  color: #1e40af;
+  background: #E3EDF2;
+  color: #4E7D96;
 }
 
 .stat-icon-orange {
-  background: #fed7aa;
-  color: #ea580c;
+  background: #fff0e8;
+  color: #FF844B;
 }
 
 .stat-icon-yellow {
@@ -652,8 +788,8 @@ export default {
 }
 
 .stat-icon-green {
-  background: #d1fae5;
-  color: #059669;
+  background: #e6e8eb;
+  color: #0A0D25;
 }
 
 /* Filters section */
@@ -686,9 +822,9 @@ export default {
 }
 
 .status-tab.active {
-  background: #1e40af;
+  background: #4E7D96;
   color: white;
-  border-color: #1e40af;
+  border-color: #4E7D96;
 }
 
 .filters-row {
@@ -801,18 +937,18 @@ export default {
 }
 
 .status-new {
-  background: #dbeafe;
-  color: #1e40af;
+  background: #E3EDF2;
+  color: #4E7D96;
 }
 
 .status-in-progress {
-  background: #fef3c7;
-  color: #d97706;
+  background: #fff0e8;
+  color: #FF844B;
 }
 
 .status-resolved {
-  background: #d1fae5;
-  color: #059669;
+  background: #e6e8eb;
+  color: #0A0D25;
 }
 
 .reclamation-header {
@@ -905,12 +1041,12 @@ export default {
 }
 
 .primary-btn {
-  background: #1e40af;
+  background: #4E7D96;
   color: white;
 }
 
 .primary-btn:hover {
-  background: #1d4ed8;
+  background: #3d6275;
 }
 
 .secondary-btn {
@@ -924,21 +1060,21 @@ export default {
 }
 
 .warning-btn {
-  background: #d97706;
+  background: #FF844B;
   color: white;
 }
 
 .warning-btn:hover {
-  background: #b45309;
+  background: #e56b30;
 }
 
 .success-btn {
-  background: #059669;
+  background: #0A0D25;
   color: white;
 }
 
 .success-btn:hover {
-  background: #047857;
+  background: #050613;
 }
 
 /* Pagination */
@@ -1082,8 +1218,8 @@ export default {
 
 .form-group textarea:focus {
   outline: none;
-  border-color: #1e40af;
-  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+  border-color: #4E7D96;
+  box-shadow: 0 0 0 3px rgba(78, 125, 150, 0.1);
 }
 
 .modal-actions {
@@ -1153,5 +1289,179 @@ export default {
     width: 100%;
     text-align: center;
   }
+}
+
+/* Demand Details Modal Styles */
+.demand-modal-content {
+  max-width: 900px;
+}
+
+.detail-section {
+  margin-bottom: 2rem;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0A0D25;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #4E7D96;
+}
+
+.section-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #4E7D96;
+}
+
+/* Student Card */
+.student-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #4E7D96;
+}
+
+.student-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.student-avatar {
+  width: 4rem;
+  height: 4rem;
+  background: linear-gradient(135deg, #4E7D96 0%, #3d6275 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.student-avatar .avatar-icon {
+  width: 2rem;
+  height: 2rem;
+  color: white;
+}
+
+.student-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0A0D25;
+  margin: 0;
+}
+
+.student-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Demande Info Grid */
+.demande-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Detail Items */
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-item label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.detail-value {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1f2937;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  border-left: 3px solid #4E7D96;
+}
+
+/* Type Badge */
+.type-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+  color: white;
+}
+
+.type-attestation-scolarite {
+  background: linear-gradient(135deg, #4E7D96 0%, #3d6275 100%);
+}
+
+.type-attestation-reussite {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.type-releve-notes {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+}
+
+.type-convention-stage {
+  background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%);
+}
+
+/* Status Badge for Demand */
+.status-valide {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.status-refuse {
+  background: linear-gradient(135deg, rgba(255, 132, 75, 0.1) 0%, rgba(255, 132, 75, 0.05) 100%);
+  color: #ea580c;
+  border: 1px solid rgba(255, 132, 75, 0.2);
+}
+
+.status-encours {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
+  color: #d97706;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+/* Refus Card */
+.refus-card {
+  background: linear-gradient(135deg, rgba(255, 132, 75, 0.1) 0%, rgba(255, 132, 75, 0.05) 100%);
+  border: 1px solid rgba(255, 132, 75, 0.2);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border-left: 4px solid #ea580c;
+}
+
+.motif-refus {
+  font-size: 1rem;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.6;
 }
 </style>

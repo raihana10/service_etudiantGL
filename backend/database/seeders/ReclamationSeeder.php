@@ -21,10 +21,12 @@ class ReclamationSeeder extends Seeder
                 'dateReponse' => Carbon::now()->subDays(40),
                 'reponse' => 'Bonjour Mohammed, après vérification auprès du département, il s\'agissait effectivement d\'une erreur de saisie. Votre note a été corrigée à 14.5/20. Un nouveau relevé sera disponible sous 48h.',
                 'sujet' => 'Erreur sur relevé de notes - Module BD',
+                'idDemande' => 1, // Lien avec la demande de relevé de notes
             ],
             [
                 'idEtudiant' => 3,
                 'idAdmin' => 2,
+                'idDemande' => null,
                 'description' => 'Je n\'arrive pas à accéder à la plateforme de téléchargement des cours. Mon compte semble bloqué depuis 3 jours.',
                 'statut' => 'Résolue',
                 'datesoumission' => Carbon::now()->subDays(20),
@@ -41,12 +43,14 @@ class ReclamationSeeder extends Seeder
                 'dateReponse' => Carbon::now()->subDays(13),
                 'reponse' => 'Bonjour Nadia, nous nous excusons pour ce retard. Votre attestation est maintenant prête et vous pouvez la récupérer dès maintenant au bureau de la scolarité (bureau 204).',
                 'sujet' => 'Retard de délivrance d\'attestation',
+                'idDemande' => 11, // Lien avec la demande d'attestation de scolarité
             ],
             
             // Réclamations En cours
             [
                 'idEtudiant' => 5,
                 'idAdmin' => 1,
+                'idDemande' => null,
                 'description' => 'Le professeur du module "Analyse Numérique" n\'a toujours pas publié les résultats de l\'examen final passé il y a 3 semaines. Nous n\'avons aucune information.',
                 'statut' => 'En cours',
                 'datesoumission' => Carbon::now()->subDays(8),
@@ -63,12 +67,14 @@ class ReclamationSeeder extends Seeder
                 'dateReponse' => Carbon::now()->subDays(4),
                 'reponse' => 'Bonjour Hamza, après examen de votre dossier, il manque les coordonnées téléphoniques et email de votre encadrant en entreprise. Veuillez soumettre une nouvelle demande avec ces informations.',
                 'sujet' => 'Précisions sur refus de convention',
+                'idDemande' => 10, // Lien avec la demande de convention de stage refusée
             ],
             
             // Réclamations Nouvelles
             [
                 'idEtudiant' => 4,
                 'idAdmin' => null,
+                'idDemande' => null,
                 'description' => 'L\'emploi du temps publié pour le semestre prochain présente un chevauchement entre deux modules obligatoires (Topologie et Algèbre Avancée) le mardi de 14h à 16h.',
                 'statut' => 'Nouvelle',
                 'datesoumission' => Carbon::now()->subDays(3),
@@ -85,10 +91,12 @@ class ReclamationSeeder extends Seeder
                 'dateReponse' => null,
                 'reponse' => null,
                 'sujet' => 'Modification sujet de stage',
+                'idDemande' => 7, // Lien avec la demande de convention de stage
             ],
             [
                 'idEtudiant' => 12,
                 'idAdmin' => null,
+                'idDemande' => null,
                 'description' => 'La salle informatique A12 est très souvent indisponible alors qu\'elle apparaît comme libre dans le système de réservation. Cela perturbe nos TPs.',
                 'statut' => 'Nouvelle',
                 'datesoumission' => Carbon::now()->subDay(),
@@ -105,10 +113,12 @@ class ReclamationSeeder extends Seeder
                 'dateReponse' => null,
                 'reponse' => null,
                 'sujet' => 'Non-réception email de notification',
+                'idDemande' => 9, // Lien avec la demande d'attestation de réussite refusée
             ],
             [
                 'idEtudiant' => 10,
                 'idAdmin' => null,
+                'idDemande' => null,
                 'description' => 'Le lien de téléchargement du support de cours du module "Deep Learning" est cassé. Impossible d\'accéder aux ressources depuis une semaine.',
                 'statut' => 'Nouvelle',
                 'datesoumission' => Carbon::now()->subHours(5),

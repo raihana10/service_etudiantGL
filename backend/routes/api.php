@@ -43,6 +43,7 @@ Route::prefix('admin/historique')->group(function () {
 // Demandes management routes
 Route::prefix('admin/demandes')->group(function () {
     Route::get('/', [DemandesController::class, 'index']);
+    Route::get('/details/{idDemande}', [DemandesController::class, 'getDetails']);
     Route::get('/{num_demande}/preview', [DemandesController::class, 'preview']);
     Route::get('/{num_demande}/download', [DemandesController::class, 'download']);
     Route::post('/{num_demande}/valider', [DemandesController::class, 'valider']);

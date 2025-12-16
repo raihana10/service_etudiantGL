@@ -19,6 +19,7 @@ class Reclamation extends Model
     protected $fillable = [
         'idEtudiant',
         'idAdmin',
+        'idDemande',
         'description',
         'statut',
         'datesoumission',
@@ -32,6 +33,7 @@ class Reclamation extends Model
         'dateReponse' => 'datetime',
         'idEtudiant' => 'integer',
         'idAdmin' => 'integer',
+        'idDemande' => 'integer',
     ];
 
     /**
@@ -48,6 +50,14 @@ class Reclamation extends Model
     public function administrateur()
     {
         return $this->belongsTo(Administrateur::class, 'idAdmin', 'idAdmin');
+    }
+
+    /**
+     * Relation avec la demande
+     */
+    public function demande()
+    {
+        return $this->belongsTo(Demande::class, 'idDemande', 'idDemande');
     }
 
     /**

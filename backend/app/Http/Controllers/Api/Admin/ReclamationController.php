@@ -14,17 +14,13 @@ class ReclamationController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Reclamation::with(['etudiant', 'administrateur']);
+        $query = Reclamation::with(['etudiant', 'administrateur', 'demande']);
 
         // Filter by status
         if ($request->has('statut') && $request->statut !== 'Toutes') {
             $query->where('statut', $request->statut);
         }
 
-        // Filter by priority
-        if ($request->has('priorite') && $request->priorite !== 'Toutes') {
-            $query->where('priorite', $request->priorite);
-        }
 
         // Search functionality
         if ($request->has('search')) {
@@ -54,7 +50,7 @@ class ReclamationController extends Controller
 
     public function show($id)
     {
-        $reclamation = Reclamation::with(['etudiant', 'administrateur'])
+        $reclamation = Reclamation::with(['etudiant', 'administrateur', 'demande'])
             ->findOrFail($id);
 
         return response()->json([
@@ -174,7 +170,6 @@ class ReclamationController extends Controller
             'nouvelles' => Reclamation::where('statut', 'Nouvelle')->count(),
             'en_cours' => Reclamation::where('statut', 'En cours')->count(),
             'resolues' => Reclamation::where('statut', 'Résolue')->count(),
-            'haute_priorite' => Reclamation::where('priorite', 'Haute')->count(),
         ];
 
         return response()->json([

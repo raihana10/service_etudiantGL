@@ -280,10 +280,11 @@ class DemandesController extends Controller
                     $fileName = $safeType . '_' . $safeNom . '_' . $numDemande . '_' . now()->format('Y-m-d') . '.pdf';
 
                     Log::info("Envoi email à {$email} pour demande #{$num_demande} avec pièce jointe {$fileName}");
-                    Mail::send([], [], function ($message) use ($email, $typeLabel, $demande, $pdfContent, $fileName) {
+                    $emailHtml = $this->renderEmailValidee($demande, $typeLabel, $fileName);
+                    Mail::send([], [], function ($message) use ($email, $typeLabel, $emailHtml, $pdfContent, $fileName) {
                         $message->to($email)
                             ->subject('Votre ' . $typeLabel . ' a été validée')
-                            ->html('<p>Bonjour,</p><p>Votre ' . e($typeLabel) . ' (N° ' . e($demande->num_demande) . ') a été validée. Vous trouverez le document en pièce jointe.</p><p>Cordialement,<br>Service de Scolarité</p>')
+                            ->html($emailHtml)
                             ->attachData($pdfContent, $fileName, ['mime' => 'application/pdf']);
                     });
                     Log::info("Email envoyé avec succès à {$email}");
@@ -352,10 +353,11 @@ class DemandesController extends Controller
             if ($email) {
                 try {
                     Log::info("Envoi email de refus à {$email} pour demande #{$num_demande}");
-                    Mail::send([], [], function ($message) use ($email, $typeLabel, $demande) {
+                    $emailHtml = $this->renderEmailRefusee($demande, $typeLabel);
+                    Mail::send([], [], function ($message) use ($email, $typeLabel, $emailHtml) {
                         $message->to($email)
                             ->subject('Votre ' . $typeLabel . ' a été refusée')
-                            ->html('<p>Bonjour,</p><p>Votre ' . e($typeLabel) . ' (N° ' . e($demande->num_demande) . ') a été refusée.</p><p><strong>Motif:</strong> ' . e($demande->motif_refus) . '</p><p>Cordialement,<br>Service de Scolarité</p>');
+                            ->html($emailHtml);
                     });
                     Log::info("Email de refus envoyé avec succès à {$email}");
                 } catch (\Exception $mailError) {
@@ -469,6 +471,156 @@ class DemandesController extends Controller
         ];
         return $mapping[$statut] ?? $statut;
     }
+
+    /**
+     * Rendu HTML stylisé pour l'email de validation
+     */
+   private function renderEmailValidee($demande, $typeLabel, $fileName)
+{
+    $type = e($typeLabel);
+    $num = e($demande->num_demande);
+    $etudiantNom = $demande->etudiant ? e($demande->etudiant->prenom . ' ' . $demande->etudiant->nom) : 'Étudiant';
+
+    return <<<HTML
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Validation de la demande</title>
+</head>
+<body style="margin:0;padding:40px 20px;background:#f5f5f5;font-family:Arial,sans-serif;">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e0e0e0;border-radius:8px;">
+    
+    <!-- Header -->
+    <div style="padding:30px;background:#4caf50;text-align:center;border-radius:8px 8px 0 0;">
+      <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:normal;">
+        ✓ Demande Validée
+      </h1>
+    </div>
+    
+    <!-- Corps -->
+    <div style="padding:30px;color:#333333;line-height:1.6;">
+      <p style="margin:0 0 20px;font-size:16px;">
+        Bonjour <strong>{$etudiantNom}</strong>,
+      </p>
+      
+      <p style="margin:0 0 20px;font-size:15px;">
+        Votre demande de <strong>{$type}</strong> a été validée avec succès.
+      </p>
+      
+      <!-- Informations -->
+      <div style="margin:25px 0;padding:20px;background:#f9f9f9;border-left:4px solid #4caf50;border-radius:4px;">
+        <p style="margin:0 0 10px;font-size:14px;">
+          <strong>Type de document :</strong> {$type}
+        </p>
+        <p style="margin:0 0 10px;font-size:14px;">
+          <strong>Numéro de demande :</strong> {$num}
+        </p>
+        <p style="margin:0;font-size:14px;">
+          <strong>Fichier joint :</strong> {$fileName}
+        </p>
+      </div>
+      
+      <div style="margin:25px 0;padding:15px;background:#e8f5e9;border-radius:4px;">
+        <p style="margin:0;font-size:14px;color:#2e7d32;">
+          📎 Le document PDF est joint à cet email.
+        </p>
+      </div>
+      
+      <p style="margin:20px 0 0;font-size:14px;color:#666666;">
+        Conservez ce numéro pour tout suivi auprès du service de scolarité.
+      </p>
+    </div>
+    
+    <!-- Footer -->
+    <div style="padding:20px 30px;background:#f9f9f9;border-top:1px solid #e0e0e0;border-radius:0 0 8px 8px;">
+      <p style="margin:0;font-size:13px;color:#666666;text-align:center;">
+        École Nationale des Sciences Appliquées de Tétouan<br>
+        <span style="font-size:12px;color:#999999;">Cet email est envoyé automatiquement, merci de ne pas y répondre.</span>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+}
+
+/**
+ * Rendu HTML simple pour l'email de refus
+ */
+private function renderEmailRefusee($demande, $typeLabel)
+{
+    $type = e($typeLabel);
+    $num = e($demande->num_demande);
+    $etudiantNom = $demande->etudiant ? e($demande->etudiant->prenom . ' ' . $demande->etudiant->nom) : 'Étudiant';
+    $motif = e($demande->motif_refus ?? 'Non spécifié');
+
+    return <<<HTML
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Refus de la demande</title>
+</head>
+<body style="margin:0;padding:40px 20px;background:#f5f5f5;font-family:Arial,sans-serif;">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e0e0e0;border-radius:8px;">
+    
+    <!-- Header -->
+    <div style="padding:30px;background:#f44336;text-align:center;border-radius:8px 8px 0 0;">
+      <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:normal;">
+        ✕ Demande Refusée
+      </h1>
+    </div>
+    
+    <!-- Corps -->
+    <div style="padding:30px;color:#333333;line-height:1.6;">
+      <p style="margin:0 0 20px;font-size:16px;">
+        Bonjour <strong>{$etudiantNom}</strong>,
+      </p>
+      
+      <p style="margin:0 0 20px;font-size:15px;">
+        Votre demande de <strong>{$type}</strong> a été refusée.
+      </p>
+      
+      <!-- Informations -->
+      <div style="margin:25px 0;padding:20px;background:#f9f9f9;border-left:4px solid #f44336;border-radius:4px;">
+        <p style="margin:0 0 10px;font-size:14px;">
+          <strong>Type de document :</strong> {$type}
+        </p>
+        <p style="margin:0;font-size:14px;">
+          <strong>Numéro de demande :</strong> {$num}
+        </p>
+      </div>
+      
+      <!-- Motif -->
+      <div style="margin:25px 0;padding:15px;background:#ffebee;border-radius:4px;">
+        <p style="margin:0 0 8px;font-size:14px;color:#c62828;font-weight:bold;">
+          Motif du refus :
+        </p>
+        <p style="margin:0;font-size:14px;color:#d32f2f;">
+          {$motif}
+        </p>
+      </div>
+      
+      <p style="margin:20px 0 0;font-size:14px;color:#666666;">
+        Vous pouvez corriger les informations et soumettre une nouvelle demande. Pour toute question, contactez le service de scolarité.
+      </p>
+    </div>
+    
+    <!-- Footer -->
+    <div style="padding:20px 30px;background:#f9f9f9;border-top:1px solid #e0e0e0;border-radius:0 0 8px 8px;">
+      <p style="margin:0;font-size:13px;color:#666666;text-align:center;">
+        École Nationale des Sciences Appliquées de Tétouan<br>
+        <span style="font-size:12px;color:#999999;">Cet email est envoyé automatiquement, merci de ne pas y répondre.</span>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+}
 
     /**
      * Prévisualiser une demande (générer HTML du document)

@@ -2,16 +2,27 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\EtudiantController;
 use App\Http\Controllers\Api\TestController;
 use App\Http\Controllers\Api\Auth\AdminLoginController;
 use App\Http\Controllers\Api\Admin\DashboardController;
 use App\Http\Controllers\Api\Admin\HistoriqueController;
 use App\Http\Controllers\Api\Admin\DemandesController;
 use App\Http\Controllers\Api\Admin\ReclamationController;
-use App\Http\Controllers\Api\Admin\TestEmailController;
 
-Route::get('/test', [TestController::class, 'testConnection']);
-// Dashboard routes
+
+
+
+// Étudiant routes
+Route::prefix('etudiant')->group(function () {
+    Route::post('/verifier', [EtudiantController::class, 'verifier']);
+    Route::post('/demande', [EtudiantController::class, 'creerDemande']);
+    Route::post('/reclamation', [EtudiantController::class, 'creerReclamation']);
+    Route::post('/verifier-attestation-reussite', [EtudiantController::class, 'verifierAttestationReussite']);
+    Route::post('/rechercher-demande', [EtudiantController::class, 'rechercherDemandeParNumero']);
+});
+
+// Admin authentication routes
 Route::post('/admin/login', [AdminLoginController::class, 'login']);
 Route::get('/admin/profile', [AdminLoginController::class, 'profile']);
 Route::post('/admin/logout', [AdminLoginController::class, 'logout']);
@@ -47,5 +58,4 @@ Route::prefix('admin/reclamations')->group(function () {
     Route::post('/{id}/respond', [ReclamationController::class, 'respond']);
 });
 
-// Test email route
-Route::get('/admin/test-email', [TestEmailController::class, 'sendTestEmail']);
+

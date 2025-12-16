@@ -21,7 +21,6 @@ class Reclamation extends Model
         'idAdmin',
         'description',
         'statut',
-        'priorite',
         'datesoumission',
         'dateReponse',
         'reponse',
@@ -35,13 +34,51 @@ class Reclamation extends Model
         'idAdmin' => 'integer',
     ];
 
+    /**
+     * Relation avec l'étudiant
+     */
     public function etudiant()
     {
         return $this->belongsTo(Etudiant::class, 'idEtudiant', 'idEtudiant');
     }
 
+    /**
+     * Relation avec l'administrateur
+     */
     public function administrateur()
     {
         return $this->belongsTo(Administrateur::class, 'idAdmin', 'idAdmin');
+    }
+
+    /**
+     * Scope pour filtrer par statut
+     */
+    public function scopeParStatut($query, $statut)
+    {
+        return $query->where('statut', $statut);
+    }
+
+    /**
+     * Scope pour les réclamations nouvelles
+     */
+    public function scopeNouvelles($query)
+    {
+        return $query->where('statut', 'Nouvelle');
+    }
+
+    /**
+     * Scope pour les réclamations en cours
+     */
+    public function scopeEnCours($query)
+    {
+        return $query->where('statut', 'En cours');
+    }
+
+    /**
+     * Scope pour les réclamations résolues
+     */
+    public function scopeResolues($query)
+    {
+        return $query->where('statut', 'Résolue');
     }
 }

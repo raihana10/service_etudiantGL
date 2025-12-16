@@ -9,6 +9,8 @@ class Etudiant extends Model
 {
     use HasFactory;
 
+    public $timestamps = false; // Désactiver created_at et updated_at
+
     protected $table = 'etudiant';
     protected $primaryKey = 'idEtudiant';
     public $incrementing = true;
@@ -24,6 +26,7 @@ class Etudiant extends Model
         'emailInstitu',
         'dateNaissance',
         'lieuNaissance',
+        'anneeObtentionDiplome',
     ];
 
     protected $casts = [

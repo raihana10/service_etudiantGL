@@ -9,11 +9,12 @@ class Demande extends Model
 {
     use HasFactory;
 
+    public $timestamps = false; // La table n'a pas de colonnes created_at/updated_at
+
     protected $table = 'demande';
     protected $primaryKey = 'idDemande';
     public $incrementing = true;
     protected $keyType = 'int';
-    public $timestamps = false; // La table n'a pas de colonnes created_at/updated_at
 
     protected $fillable = [
         'idEtudiant',
@@ -23,6 +24,7 @@ class Demande extends Model
         'statut',
         'motif_refus',
         'date_traitement',
+        'num_demande',
     ];
 
     protected $casts = [

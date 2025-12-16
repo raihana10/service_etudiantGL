@@ -9,6 +9,8 @@ class ConventionStage extends Model
 {
     use HasFactory;
 
+    public $timestamps = false; // Désactiver created_at et updated_at
+
     protected $table = 'conventionstage';
     protected $primaryKey = 'idCS';
     public $incrementing = true;

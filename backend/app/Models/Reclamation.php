@@ -9,6 +9,8 @@ class Reclamation extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
+
     protected $table = 'reclamation';
     protected $primaryKey = 'idReclamation';
     public $incrementing = true;

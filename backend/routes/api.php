@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\TestController;
 use App\Http\Controllers\Api\Auth\AdminLoginController;
 use App\Http\Controllers\Api\Admin\DashboardController;
 use App\Http\Controllers\Api\Admin\HistoriqueController;
+use App\Http\Controllers\Api\Admin\ReclamationController;
+use App\Http\Controllers\Api\Admin\TestEmailController;
 
 Route::get('/test', [TestController::class, 'testConnection']);
 // Dashboard routes
@@ -26,3 +28,15 @@ Route::prefix('admin/historique')->group(function () {
     Route::get('/stats', [HistoriqueController::class, 'getHistoriqueStats']);
     Route::get('/{idDemande}', [HistoriqueController::class, 'getDemandeDetails']);
 });
+
+// Réclamations routes
+Route::prefix('admin/reclamations')->group(function () {
+    Route::get('/', [ReclamationController::class, 'index']);
+    Route::get('/statistics', [ReclamationController::class, 'getStatistics']);
+    Route::get('/{id}', [ReclamationController::class, 'show']);
+    Route::put('/{id}/status', [ReclamationController::class, 'updateStatus']);
+    Route::post('/{id}/respond', [ReclamationController::class, 'respond']);
+});
+
+// Test email route
+Route::get('/admin/test-email', [TestEmailController::class, 'sendTestEmail']);

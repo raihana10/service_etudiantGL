@@ -92,6 +92,11 @@ document.addEventListener('click', (e) => {
   border-bottom: 2px solid #3a6275;
   height: 88px; /* Même hauteur exacte que le rectangle de la sidebar */
   z-index: 999;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 13rem; /* Largeur de la sidebar */
+  transition: left 0.3s ease;
 }
 
 .navbar-container {
@@ -196,7 +201,7 @@ document.addEventListener('click', (e) => {
 /* Responsive */
 @media (max-width: 768px) {
   .navbar {
-    margin-left: 0;
+    left: 140px; /* Largeur de la sidebar responsive */
   }
 }
 </style>

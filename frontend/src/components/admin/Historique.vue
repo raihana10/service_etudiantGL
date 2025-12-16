@@ -23,7 +23,7 @@
               <label class="filter-label">Nom étudiant</label>
               <input 
                 v-model="filters.nomEtudiant" 
-                @input="loadHistorique" 
+                @input="debouncedSearch" 
                 type="text" 
                 placeholder="Rechercher par nom..."
                 class="filter-input"
@@ -34,7 +34,7 @@
               <label class="filter-label">N° APOGEE</label>
               <input 
                 v-model="filters.apogee" 
-                @input="loadHistorique" 
+                @input="debouncedSearch" 
                 type="text" 
                 placeholder="N° APOGEE..."
                 class="filter-input"
@@ -322,6 +322,15 @@ const filters = ref({
 const showModal = ref(false)
 const selectedDemande = ref(null)
 
+// Debounce search
+const debouncedSearch = (() => {
+  let timeout
+  return () => {
+    clearTimeout(timeout)
+    timeout = setTimeout(loadHistorique, 500)
+  }
+})()
+
 // Charger l'historique
 const loadHistorique = async () => {
   try {
@@ -443,6 +452,12 @@ onMounted(() => {
   padding: 2rem;
   margin-left: 16rem;
   margin-top: 104px; /* Espace pour le header fixe */
+}
+
+@media (max-width: 768px) {
+  .historique-content {
+    margin-left: 200px;
+  }
 }
 
 /* Page Header */

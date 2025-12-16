@@ -85,7 +85,7 @@ const handleLogout = () => {
 
 <style scoped>
 .sidebar {
-  width: 16rem;
+  width: 13rem;
   background-color: #0a1929; /* Noir/bleu marine très foncé */
   min-height: 100vh;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
@@ -109,8 +109,12 @@ const handleLogout = () => {
 }
 
 .brand-rectangle {
-  background-color: #4E7D96; /* Même couleur que l'en-tête du dashboard */
-  padding: 2rem 1.5rem;
+  background-color: #4E7D96;
+  padding: 0; /* Supprimé le padding */
+  height: 88px; /* Hauteur fixe identique à la navbar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   border-bottom: 2px solid #3a6275;
 }
@@ -204,7 +208,7 @@ const handleLogout = () => {
 /* Responsive */
 @media (max-width: 768px) {
   .sidebar {
-    width: 200px;
+    width: 140px;
   }
   
   .nav-link {

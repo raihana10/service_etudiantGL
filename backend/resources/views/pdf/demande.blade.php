@@ -233,12 +233,11 @@
       @elseif ($type === 'ReleveNote')
         @php
           $annee = optional($releve)->annee ?? 'N/A';
-          $semestre = optional($releve)->semestre ?? 'N/A';
           $filiere = optional(optional($etudiant)->filiere)->nomF ?? 'N/A';
           $niveau = optional($etudiant)->niveau ?? 'N/A';
         @endphp
         <p><strong>Année universitaire :</strong> <span class="field">{{ $annee }}</span></p>
-        <p><strong>Semestre :</strong> <span class="field">{{ $semestre }}</span></p>
+       
         <p><strong>Filière :</strong> <span class="field">{{ $filiere }}</span></p>
         <p><strong>Niveau :</strong> <span class="field">{{ $niveau }}</span></p>
 

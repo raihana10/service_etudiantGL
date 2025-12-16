@@ -206,12 +206,22 @@ class DemandesController extends Controller
             $email = optional($demande->etudiant)->emailInstitu;
             if ($email) {
                 try {
-                    Log::info("Envoi email à {$email} pour demande #{$num_demande}");
-                    Mail::send([], [], function ($message) use ($email, $typeLabel, $demande, $pdfContent) {
+                    // Créer un nom de fichier significatif
+                    $etudiantNom = $demande->etudiant ? ($demande->etudiant->nom . '_' . $demande->etudiant->prenom) : 'etudiant';
+                    $numDemande = $demande->num_demande;
+
+                    // Nettoyer les parties du nom de fichier
+                    $safeType = preg_replace('/[^A-Za-z0-9_\-]/u', '', str_replace(' ', '_', $typeLabel));
+                    $safeNom = preg_replace('/[^A-Za-z0-9\-_]/', '', $etudiantNom);
+                    
+                    $fileName = $safeType . '_' . $safeNom . '_' . $numDemande . '_' . now()->format('Y-m-d') . '.pdf';
+
+                    Log::info("Envoi email à {$email} pour demande #{$num_demande} avec pièce jointe {$fileName}");
+                    Mail::send([], [], function ($message) use ($email, $typeLabel, $demande, $pdfContent, $fileName) {
                         $message->to($email)
                             ->subject('Votre ' . $typeLabel . ' a été validée')
                             ->html('<p>Bonjour,</p><p>Votre ' . e($typeLabel) . ' (N° ' . e($demande->num_demande) . ') a été validée. Vous trouverez le document en pièce jointe.</p><p>Cordialement,<br>Service de Scolarité</p>')
-                            ->attachData($pdfContent, 'Demande-' . $demande->num_demande . '.pdf', ['mime' => 'application/pdf']);
+                            ->attachData($pdfContent, $fileName, ['mime' => 'application/pdf']);
                     });
                     Log::info("Email envoyé avec succès à {$email}");
                 } catch (\Exception $mailError) {
@@ -336,7 +346,7 @@ class DemandesController extends Controller
         case 'ReleveNote':
             $detail = $demande->relevenote()->first();
             return $detail ? [
-                'semestre' => $detail->semestre ?? 'N/A',
+    
                 'anneeUniversitaire' => $detail->annee ?? 'N/A',
             ] : [];
 
@@ -465,7 +475,26 @@ class DemandesController extends Controller
 
             if (class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
                 $pdf = Pdf::loadView($view, $data)->setPaper('a4');
-                return $pdf->stream('preview.pdf');
+
+                // Créer un nom de fichier significatif
+                $typeLabel = $this->getTypeLabel($demande->typeDoc);
+                $etudiantNom = $demande->etudiant ? ($demande->etudiant->nom . '_' . $demande->etudiant->prenom) : 'etudiant';
+                $numDemande = $demande->num_demande;
+                
+                // Nettoyer les parties du nom de fichier
+                $safeType = preg_replace('/[^A-Za-z0-9_\-]/u', '', str_replace(' ', '_', $typeLabel));
+                $safeNom = preg_replace('/[^A-Za-z0-9\-_]/', '', $etudiantNom);
+
+                $fileName = $numDemande . '.pdf';
+
+                $content = $pdf->output();
+                return response($content, 200)
+                    ->header('Content-Type', 'application/pdf')
+                    ->header('Content-Disposition', 'inline; filename="' . $fileName . '"')
+                    ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    ->header('Pragma', 'no-cache')
+                    ->header('Access-Control-Allow-Origin', '*')
+                    ->header('Access-Control-Expose-Headers', 'Content-Disposition');
             }
 
             // Fallback HTML if dompdf is not available
@@ -482,5 +511,83 @@ class DemandesController extends Controller
         }
     }
 
+    /**
+     * Télécharger le PDF avec un nom {num_demande}.pdf (Content-Disposition: attachment)
+     */
+    public function download($num_demande)
+    {
+        try {
+            $demande = Demande::with(['etudiant.filiere', 'attestationscolarite', 'attestationreussite', 'relevenote', 'conventionstage'])
+                ->where('num_demande', $num_demande)
+                ->firstOrFail();
+
+            $map = [
+                'AttestationScolarite' => 'pdf.demande',
+                'AttestationReussite'  => 'pdf.demande',
+                'ReleveNote'           => 'pdf.demande',
+                'ConventionStage'      => 'pdf.demande',
+            ];
+            $view = $map[$demande->typeDoc] ?? 'pdf.demande';
+
+            // Préparer les notes/modules si applicables
+            $notes = [];
+            if (($demande->typeDoc === 'ReleveNote' && $demande->relevenote) || 
+                ($demande->typeDoc === 'AttestationReussite' && $demande->attestationreussite)) {
+                $annee = ($demande->typeDoc === 'ReleveNote') 
+                    ? $demande->relevenote->annee 
+                    : $demande->attestationreussite->anneeObtention;
+                $idEtudiant = $demande->idEtudiant;
+                $searchYear = $annee;
+                if (preg_match('/(\d{4})/', $annee, $matches)) {
+                    $searchYear = $matches[1];
+                }
+                $notes = DB::table('concerne as c')
+                    ->join('contient as ct', 'ct.idContient', '=', 'c.idContient')
+                    ->join('module as m', 'm.idM', '=', 'ct.idM')
+                    ->where('c.idEtudiant', $idEtudiant)
+                    ->where('c.annee', 'like', '%' . $searchYear . '%')
+                    ->select('m.code', 'm.nomM as module', 'c.note')
+                    ->orderBy('m.code')
+                    ->get()
+                    ->map(function ($row) {
+                        $note = is_null($row->note) ? null : floatval($row->note);
+                        return [
+                            'code' => $row->code ?? 'N/A',
+                            'module' => $row->module ?? 'N/A',
+                            'note' => $note,
+                            'resultat' => is_null($note) ? 'N/A' : ($note >= 10 ? 'Validé' : 'Non validé'),
+                        ];
+                    })->toArray();
+            }
+
+            $data = [
+                'demande'    => $demande,
+                'etudiant'   => $demande->etudiant,
+                'scolarite'  => $demande->attestationscolarite,
+                'reussite'   => $demande->attestationreussite,
+                'releve'     => $demande->relevenote,
+                'convention' => $demande->conventionstage,
+                'notes'      => $notes,
+                'now'        => now(),
+            ];
+
+            $pdf = Pdf::loadView($view, $data)->setPaper('a4');
+            $content = $pdf->output();
+            $fileName = $demande->num_demande . '.pdf';
+
+            return response()->streamDownload(function () use ($content) {
+                echo $content;
+            }, $fileName, [
+                'Content-Type' => 'application/pdf',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma' => 'no-cache',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors du téléchargement du document: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
 }

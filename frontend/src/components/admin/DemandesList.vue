@@ -150,6 +150,9 @@
                 </div>
                 <div v-else-if="previewError" class="empty">{{ previewError }}</div>
                 <div v-else-if="previewUrl" class="pdf-container">
+                  <div style="display:flex; justify-content:flex-end; margin-bottom: .5rem; gap: .5rem;">
+                    
+                  </div>
                   <iframe :src="previewUrl" class="pdf-frame"></iframe>
                 </div>
                 <div v-else class="empty">Aucune prévisualisation disponible</div>
@@ -239,6 +242,7 @@ const refuseReason = ref('')
 const previewUrl = ref(null)
 const previewLoading = ref(false)
 const previewError = ref(null)
+const downloadHref = ref(null)
 
 const tabs = [
   { id: 'toutes', label: 'Toutes' },
@@ -316,9 +320,9 @@ const openPreviewModal = async (demande) => {
   previewModal.value = { isOpen: true, demande }
   try {
     const id = demande.num_demande ?? demande.id
-    const res = await axios.get(`http://localhost:8000/api/admin/demandes/${id}/preview`, { responseType: 'blob' })
-    const blob = new Blob([res.data], { type: 'application/pdf' })
-    previewUrl.value = URL.createObjectURL(blob)
+    // Charger directement l'URL pour que le navigateur utilise Content-Disposition (nom de fichier)
+    previewUrl.value = `http://localhost:8000/api/admin/demandes/${id}/preview?t=${Date.now()}`
+    downloadHref.value = `http://localhost:8000/api/admin/demandes/${id}/download?t=${Date.now()}`
   } catch (e) {
     console.error('Erreur de prévisualisation:', e)
     previewError.value = 'Impossible de charger la prévisualisation du PDF'
@@ -328,12 +332,15 @@ const openPreviewModal = async (demande) => {
 }
 const closePreviewModal = () => {
   if (previewUrl.value) {
-    URL.revokeObjectURL(previewUrl.value)
+    if (previewUrl.value.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl.value)
+    }
     previewUrl.value = null
   }
   previewLoading.value = false
   previewError.value = null
   previewModal.value = { isOpen: false, demande: null }
+  downloadHref.value = null
 }
 const openValidateModal = (demande) => { validateModal.value = { isOpen: true, demande } }
 const closeValidateModal = () => { validateModal.value = { isOpen: false, demande: null } }

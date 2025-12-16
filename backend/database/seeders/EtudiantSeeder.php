@@ -24,6 +24,7 @@ class EtudiantSeeder extends Seeder
                 'emailInstitu' => 'm.alami@etu.university.ma',
                 'dateNaissance' => '2002-05-15',
                 'lieuNaissance' => 'Casablanca',
+                'anneeObtentionDiplome' => null,
             ],
             [
                 'nom' => 'BENNANI',
@@ -35,6 +36,7 @@ class EtudiantSeeder extends Seeder
                 'emailInstitu' => 'f.bennani@etu.university.ma',
                 'dateNaissance' => '2003-08-22',
                 'lieuNaissance' => 'Rabat',
+                'anneeObtentionDiplome' => null,
             ],
             [
                 'nom' => 'CHAKIR',
@@ -46,6 +48,7 @@ class EtudiantSeeder extends Seeder
                 'emailInstitu' => 'y.chakir@etu.university.ma',
                 'dateNaissance' => '2004-12-10',
                 'lieuNaissance' => 'Fès',
+                'anneeObtentionDiplome' => null,
             ],
             
             // Mathématiques
@@ -59,6 +62,7 @@ class EtudiantSeeder extends Seeder
                 'emailInstitu' => 's.darif@etu.university.ma',
                 'dateNaissance' => '2002-03-18',
                 'lieuNaissance' => 'Marrakech',
+                'anneeObtentionDiplome' => null,
             ],
             [
                 'nom' => 'ELIDRISSI',
@@ -70,6 +74,7 @@ class EtudiantSeeder extends Seeder
                 'emailInstitu' => 'o.elidrissi@etu.university.ma',
                 'dateNaissance' => '2003-07-25',
                 'lieuNaissance' => 'Tanger',
+                'anneeObtentionDiplome' => null,
             ],
             
             // Économie
@@ -83,6 +88,7 @@ class EtudiantSeeder extends Seeder
                 'emailInstitu' => 'a.fassi@etu.university.ma',
                 'dateNaissance' => '2002-11-30',
                 'lieuNaissance' => 'Fès',
+                'anneeObtentionDiplome' => null,
             ],
             
             // Master Génie Logiciel
@@ -96,6 +102,7 @@ class EtudiantSeeder extends Seeder
                 'emailInstitu' => 'k.ghazi@etu.university.ma',
                 'dateNaissance' => '2000-04-12',
                 'lieuNaissance' => 'Casablanca',
+                'anneeObtentionDiplome' => 2024,
             ],
             [
                 'nom' => 'HAJJI',
@@ -107,6 +114,7 @@ class EtudiantSeeder extends Seeder
                 'emailInstitu' => 'n.hajji@etu.university.ma',
                 'dateNaissance' => '2001-09-05',
                 'lieuNaissance' => 'Rabat',
+                'anneeObtentionDiplome' => null,
             ],
             
             // Master IA
@@ -120,6 +128,7 @@ class EtudiantSeeder extends Seeder
                 'emailInstitu' => 'm.idrissi@etu.university.ma',
                 'dateNaissance' => '2000-06-20',
                 'lieuNaissance' => 'Meknès',
+                'anneeObtentionDiplome' => 2024,
             ],
             [
                 'nom' => 'JAAFARI',
@@ -131,6 +140,7 @@ class EtudiantSeeder extends Seeder
                 'emailInstitu' => 's.jaafari@etu.university.ma',
                 'dateNaissance' => '2001-02-14',
                 'lieuNaissance' => 'Agadir',
+                'anneeObtentionDiplome' => null,
             ],
             
             // Master Cybersécurité
@@ -144,6 +154,7 @@ class EtudiantSeeder extends Seeder
                 'emailInstitu' => 'h.khalil@etu.university.ma',
                 'dateNaissance' => '2000-10-08',
                 'lieuNaissance' => 'Casablanca',
+                'anneeObtentionDiplome' => 2024,
             ],
             [
                 'nom' => 'LAHLOU',
@@ -155,6 +166,7 @@ class EtudiantSeeder extends Seeder
                 'emailInstitu' => 'i.lahlou@etu.university.ma',
                 'dateNaissance' => '2001-01-28',
                 'lieuNaissance' => 'Oujda',
+                'anneeObtentionDiplome' => null,
             ],
             
             // Physique
@@ -168,6 +180,7 @@ class EtudiantSeeder extends Seeder
                 'emailInstitu' => 'a.mansouri@etu.university.ma',
                 'dateNaissance' => '2003-04-17',
                 'lieuNaissance' => 'Tétouan',
+                'anneeObtentionDiplome' => null,
             ],
             
             // Chimie
@@ -181,6 +194,7 @@ class EtudiantSeeder extends Seeder
                 'emailInstitu' => 'y.naciri@etu.university.ma',
                 'dateNaissance' => '2002-08-03',
                 'lieuNaissance' => 'Kenitra',
+                'anneeObtentionDiplome' => null,
             ],
             
             // Biologie
@@ -194,6 +208,7 @@ class EtudiantSeeder extends Seeder
                 'emailInstitu' => 'r.ouardi@etu.university.ma',
                 'dateNaissance' => '2004-11-19',
                 'lieuNaissance' => 'El Jadida',
+                'anneeObtentionDiplome' => null,
             ],
         ];
 

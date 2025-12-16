@@ -458,7 +458,7 @@ const reinitialiserFormulaire = () => {
             </div>
 
             <div class="form-group">
-              <label for="numDocument">Numéro de document (optionnel)</label>
+              <label for="numDocument">Numéro de document </label>
               <input 
                 id="numDocument"
                 v-model="informationsSupplementaires.numDocument" 
@@ -819,20 +819,6 @@ const reinitialiserFormulaire = () => {
                 <option value="2010-2011">2010-2011</option>
                 <option value="2009-2010">2009-2010</option>
                 <option value="2008-2009">2008-2009</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="semestre">Semestre</label>
-              <select 
-                id="semestre"
-                v-model="informationsSupplementaires.semestre" 
-                class="form-select"
-                required
-              >
-                <option value="" disabled selected>-- Choisissez le semestre --</option>
-                <option value="1">Semestre 1</option>
-                <option value="2">Semestre 2</option>
               </select>
             </div>
           </div>

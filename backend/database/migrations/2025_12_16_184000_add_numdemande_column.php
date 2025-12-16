@@ -12,18 +12,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Ajouter la colonne numDemande à la table demande
+        // Ajouter la colonne num_demande à la table demande
         Schema::table('demande', function (Blueprint $table) {
-            $table->string('numDemande', 50)->nullable()->after('idDemande');
+            $table->string('num_demande', 50)->nullable()->after('idDemande');
         });
 
         // Mettre à jour les valeurs existantes avec des numéros uniques
-        DB::statement("UPDATE demande SET numDemande = CONCAT('DEM-', YEAR(datesoumission), '-', LPAD(idDemande, 6, '0')) WHERE numDemande IS NULL OR numDemande = ''");
+        DB::statement("UPDATE demande SET num_demande = CONCAT('DEM-', YEAR(datesoumission), '-', LPAD(idDemande, 6, '0')) WHERE num_demande IS NULL OR num_demande = ''");
 
         // Rendre la colonne non nullable et unique
         Schema::table('demande', function (Blueprint $table) {
-            $table->string('numDemande', 50)->nullable(false)->change();
-            $table->unique('numDemande');
+            $table->string('num_demande', 50)->nullable(false)->change();
+            $table->unique('num_demande');
         });
     }
 
@@ -33,8 +33,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('demande', function (Blueprint $table) {
-            $table->dropUnique('demande_numdemande_unique');
-            $table->dropColumn('numDemande');
+            $table->dropUnique('demande_num_demande_unique');
+            $table->dropColumn('num_demande');
         });
     }
 };

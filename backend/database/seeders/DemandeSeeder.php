@@ -15,7 +15,7 @@ class DemandeSeeder extends Seeder
             [
                 'idEtudiant' => 1,
                 'idAdmin' => 1,
-                'numDemande' => 'DEM-2024-000001',
+                'num_demande' => 'DEM-2024-000001',
                 'datesoumission' => Carbon::now()->subDays(30),
                 'typeDoc' => 'ReleveNote',
                 'statut' => 'Validée',
@@ -25,7 +25,7 @@ class DemandeSeeder extends Seeder
             [
                 'idEtudiant' => 2,
                 'idAdmin' => 2,
-                'numDemande' => 'DEM-2024-000002',
+                'num_demande' => 'DEM-2024-000002',
                 'datesoumission' => Carbon::now()->subDays(25),
                 'typeDoc' => 'AttestationScolarite',
                 'statut' => 'Validée',
@@ -35,7 +35,7 @@ class DemandeSeeder extends Seeder
             [
                 'idEtudiant' => 4,
                 'idAdmin' => 1,
-                'numDemande' => 'DEM-2024-000003',
+                'num_demande' => 'DEM-2024-000003',
                 'datesoumission' => Carbon::now()->subDays(20),
                 'typeDoc' => 'AttestationReussite',
                 'statut' => 'Validée',
@@ -45,7 +45,7 @@ class DemandeSeeder extends Seeder
             [
                 'idEtudiant' => 7,
                 'idAdmin' => 3,
-                'numDemande' => 'DEM-2024-000004',
+                'num_demande' => 'DEM-2024-000004',
                 'datesoumission' => Carbon::now()->subDays(15),
                 'typeDoc' => 'ConventionStage',
                 'statut' => 'Validée',
@@ -57,7 +57,7 @@ class DemandeSeeder extends Seeder
             [
                 'idEtudiant' => 3,
                 'idAdmin' => null,
-                'numDemande' => 'DEM-2024-000005',
+                'num_demande' => 'DEM-2024-000005',
                 'datesoumission' => Carbon::now()->subDays(5),
                 'typeDoc' => 'AttestationScolarite',
                 'statut' => 'En attente',
@@ -67,7 +67,7 @@ class DemandeSeeder extends Seeder
             [
                 'idEtudiant' => 5,
                 'idAdmin' => null,
-                'numDemande' => 'DEM-2024-000006',
+                'num_demande' => 'DEM-2024-000006',
                 'datesoumission' => Carbon::now()->subDays(3),
                 'typeDoc' => 'ReleveNote',
                 'statut' => 'En attente',
@@ -77,7 +77,7 @@ class DemandeSeeder extends Seeder
             [
                 'idEtudiant' => 9,
                 'idAdmin' => null,
-                'numDemande' => 'DEM-2024-000007',
+                'num_demande' => 'DEM-2024-000007',
                 'datesoumission' => Carbon::now()->subDays(2),
                 'typeDoc' => 'ConventionStage',
                 'statut' => 'En attente',
@@ -87,7 +87,7 @@ class DemandeSeeder extends Seeder
             [
                 'idEtudiant' => 10,
                 'idAdmin' => null,
-                'numDemande' => 'DEM-2024-000008',
+                'num_demande' => 'DEM-2024-000008',
                 'datesoumission' => Carbon::now()->subDay(),
                 'typeDoc' => 'AttestationReussite',
                 'statut' => 'En attente',
@@ -99,7 +99,7 @@ class DemandeSeeder extends Seeder
             [
                 'idEtudiant' => 6,
                 'idAdmin' => 2,
-                'numDemande' => 'DEM-2024-000009',
+                'num_demande' => 'DEM-2024-000009',
                 'datesoumission' => Carbon::now()->subDays(10),
                 'typeDoc' => 'AttestationReussite',
                 'statut' => 'Refusée',
@@ -109,7 +109,7 @@ class DemandeSeeder extends Seeder
             [
                 'idEtudiant' => 11,
                 'idAdmin' => 3,
-                'numDemande' => 'DEM-2024-000010',
+                'num_demande' => 'DEM-2024-000010',
                 'datesoumission' => Carbon::now()->subDays(7),
                 'typeDoc' => 'ConventionStage',
                 'statut' => 'Refusée',
@@ -121,7 +121,7 @@ class DemandeSeeder extends Seeder
             [
                 'idEtudiant' => 8,
                 'idAdmin' => 1,
-                'numDemande' => 'DEM-2024-000011',
+                'num_demande' => 'DEM-2024-000011',
                 'datesoumission' => Carbon::now()->subDays(12),
                 'typeDoc' => 'ReleveNote',
                 'statut' => 'Validée',
@@ -131,7 +131,7 @@ class DemandeSeeder extends Seeder
             [
                 'idEtudiant' => 12,
                 'idAdmin' => null,
-                'numDemande' => 'DEM-2024-000012',
+                'num_demande' => 'DEM-2024-000012',
                 'datesoumission' => Carbon::now()->subHours(12),
                 'typeDoc' => 'AttestationScolarite',
                 'statut' => 'En attente',

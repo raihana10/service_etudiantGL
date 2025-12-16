@@ -330,7 +330,7 @@ const loadHistorique = async () => {
     
     const params = new URLSearchParams()
     if (filters.value.nomEtudiant) params.append('nomEtudiant', filters.value.nomEtudiant)
-    if (filters.value.apogee) params.append('apogee', filters.value.apogee)
+    if (filters.value.apogee) params.append('numApogee', filters.value.apogee)
     if (filters.value.dateTraitement) params.append('dateTraitement', filters.value.dateTraitement)
     if (filters.value.statut) params.append('statut', filters.value.statut)
     if (filters.value.typeDoc) params.append('typeDoc', filters.value.typeDoc)

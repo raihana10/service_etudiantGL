@@ -151,7 +151,9 @@
                 <div v-else-if="previewError" class="empty">{{ previewError }}</div>
                 <div v-else-if="previewUrl" class="pdf-container">
                   <div style="display:flex; justify-content:flex-end; margin-bottom: .5rem; gap: .5rem;">
-                    
+                    <a :href="downloadHref" target="_blank" rel="noopener" class="btn btn--success">
+                      Télécharger ({{ previewModal.demande?.num_demande || previewModal.demande?.id }}).pdf
+                    </a>
                   </div>
                   <iframe :src="previewUrl" class="pdf-frame"></iframe>
                 </div>
@@ -544,6 +546,11 @@ onMounted(fetchDemandes)
   transition: all 0.3s ease;
 }
 
+/* Fix search bar shrink/overflow */
+.filters > * { min-width: 0; }
+.filters__search, .search { min-width: 0; width: 100%; }
+.search__input { width: 100%; max-width: 100%; box-sizing: border-box; }
+
 /* List */
 .list > * + * { margin-top: 1rem; }
 .loading { text-align: center; padding: 2rem 0; }
@@ -607,9 +614,9 @@ onMounted(fetchDemandes)
 .preview { background: #f3f4f6; border-radius: 8px; padding: 2rem; text-align: center; }
 .pdf-frame { width: 100%; height: 75vh; border: none; }
 
-.notice { display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem; border-radius: 8px; }
-.notice--success { background: #f0fdf4; }
-.notice--danger { background: #fef2f2; }
+.notice { display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem 1.25rem; border-radius: 12px; border: 1px solid transparent; box-shadow: 0 6px 16px rgba(10, 13, 37, 0.06); }
+.notice--success { background: #f0fdf4; border-color: #bbf7d0; }
+.notice--danger { background: #fef2f2; border-color: #fecaca; }
 .text--success { color: #16a34a; }
 .text--danger { color: #dc2626; }
 

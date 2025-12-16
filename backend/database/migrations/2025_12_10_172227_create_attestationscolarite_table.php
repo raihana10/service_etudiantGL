@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('attestationscolarite', function (Blueprint $table) {
             $table->integer('idAS', true);
             $table->integer('idDemande')->unique('iddemande');
-            $table->integer('nbrExemplaire')->default(1);
+          
         });
     }
 

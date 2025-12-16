@@ -11,7 +11,9 @@ use App\Models\AttestationScolarite;
 use App\Models\AttestationReussite;
 use App\Models\ReleveNote;
 use App\Models\Reclamation;
+use App\Mail\DemandeConfirmationMail;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Mail;
 
 class EtudiantController extends Controller
 {
@@ -264,6 +266,18 @@ class EtudiantController extends Controller
                 ]);
 
                 \Log::info('Relevé de notes créé avec succès: ' . json_encode($releveNote));
+            }
+
+            // Récupérer l'étudiant pour l'email
+            $etudiant = Etudiant::find($request->idEtudiant);
+            
+            // Envoyer l'email de confirmation simple avec numéro de demande
+            try {
+                Mail::to($etudiant->emailInstitu)->send(new DemandeConfirmationMail($demande, $etudiant));
+                \Log::info('Email de confirmation envoyé à l\'étudiant: ' . $etudiant->emailInstitu);
+            } catch (\Exception $e) {
+                \Log::error('Erreur lors de l\'envoi de l\'email: ' . $e->getMessage());
+                // Ne pas bloquer la création de demande si l'email échoue
             }
 
             return response()->json([

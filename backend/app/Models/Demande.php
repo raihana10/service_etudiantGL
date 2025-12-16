@@ -9,7 +9,7 @@ class Demande extends Model
 {
     use HasFactory;
 
-    public $timestamps = false; // Désactiver created_at et updated_at
+    public $timestamps = false; // La table n'a pas de colonnes created_at/updated_at
 
     protected $table = 'demande';
     protected $primaryKey = 'idDemande';
@@ -63,4 +63,6 @@ class Demande extends Model
     {
         return $this->hasOne(ReleveNote::class, 'idDemande', 'idDemande');
     }
+
+    
 }

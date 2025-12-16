@@ -48,4 +48,12 @@ class Etudiant extends Model
     {
         return $this->hasMany(Reclamation::class, 'idEtudiant', 'idEtudiant');
     }
+    
+
+
+
+public function notes()
+{
+    return $this->hasMany(Concerne::class, 'idEtudiant', 'idEtudiant');
+}
 }

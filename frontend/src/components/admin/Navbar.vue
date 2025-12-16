@@ -95,7 +95,7 @@ document.addEventListener('click', (e) => {
   position: fixed;
   top: 0;
   right: 0;
-  left: 16rem; /* Largeur de la sidebar */
+  left: 13rem; /* Largeur de la sidebar */
   transition: left 0.3s ease;
 }
 
@@ -201,7 +201,7 @@ document.addEventListener('click', (e) => {
 /* Responsive */
 @media (max-width: 768px) {
   .navbar {
-    left: 200px; /* Largeur de la sidebar responsive */
+    left: 140px; /* Largeur de la sidebar responsive */
   }
 }
 </style>

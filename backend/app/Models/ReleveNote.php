@@ -19,7 +19,7 @@ class ReleveNote extends Model
     protected $fillable = [
         'idDemande',
         'annee',
-        'semestre',
+
     ];
 
     protected $casts = [

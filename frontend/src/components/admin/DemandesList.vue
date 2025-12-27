@@ -1,6 +1,29 @@
 <template>
   <div class="demandes-layout">
     <Navbar />
+    <!-- Notification Toast -->
+    <div v-if="notification.show" :class="['notification-toast', `notification-toast--${notification.type}`]">
+      <div class="notification-icon">
+        <svg v-if="notification.type === 'success'" class="icon-md text--success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        <svg v-else-if="notification.type === 'error'" class="icon-md text--danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+        </svg>
+        <svg v-else class="icon-md text--info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div class="notification-content">
+        <h4 class="notification-title" v-if="notification.title">{{ notification.title }}</h4>
+        <p class="notification-message">{{ notification.message }}</p>
+      </div>
+      <button @click="closeNotification" class="notification-close">
+        <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
     <div class="demandes-main">
       <Sidebar />
       <div class="demandes-content">
@@ -28,14 +51,7 @@
           <!-- Filtres -->
           <div class="card card--p4">
             <div class="filters">
-              <div>
-                <select v-model="selectedStatut" @change="fetchDemandes" class="select">
-                  <option value="tous">Tous les statuts</option>
-                  <option value="en_attente">En attente</option>
-                  <option value="acceptee">Acceptées</option>
-                  <option value="refusee">Refusées</option>
-                </select>
-              </div>
+              <!-- Status filter removed to enforce "En attente" only -->
               <div class="filters__search">
                 <div class="search">
                   <svg class="search__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -230,7 +246,7 @@ import Sidebar from './Sidebar.vue'
 
 const activeTab = ref('toutes')
 const expandedId = ref(null)
-const selectedStatut = ref('tous')
+const selectedStatut = ref('en_attente')
 const searchQuery = ref('')
 const loading = ref(false)
 const demandes = ref([])
@@ -245,6 +261,22 @@ const previewUrl = ref(null)
 const previewLoading = ref(false)
 const previewError = ref(null)
 const downloadHref = ref(null)
+
+// Notification state
+const notification = ref({ show: false, message: '', title: '', type: 'info' })
+let notificationTimeout = null
+
+const showNotification = (message, type = 'info', title = '') => {
+  notification.value = { show: true, message, type, title }
+  if (notificationTimeout) clearTimeout(notificationTimeout)
+  notificationTimeout = setTimeout(() => {
+    closeNotification()
+  }, 5000)
+}
+
+const closeNotification = () => {
+  notification.value.show = false
+}
 
 const tabs = [
   { id: 'toutes', label: 'Toutes' },
@@ -355,29 +387,32 @@ const confirmValidation = async () => {
     console.log('Validation de la demande ID:', demandeId)
     
     if (!demandeId) {
-      alert('Erreur: ID de demande manquant')
+      showNotification('Erreur: ID de demande manquant', 'error')
       return
     }
     
+    // Close modal early to show processing
+    closeValidateModal()
+    showNotification('Validation en cours...', 'info')
+
     const response = await axios.post(`http://localhost:8000/api/admin/demandes/${demandeId}/valider`)
     
     if (response.data.success) {
-      alert(response.data.message || 'Demande validée avec succès !')
-      closeValidateModal()
+      showNotification(response.data.message || 'Demande validée avec succès !', 'success')
       fetchDemandes()
     } else {
-      alert(response.data.message || 'Erreur lors de la validation')
+      showNotification(response.data.message || 'Erreur lors de la validation', 'error')
     }
   } catch (error) {
     console.error('Erreur lors de la validation:', error)
     const errorMessage = error.response?.data?.message || error.message || 'Erreur lors de la validation de la demande'
-    alert('Erreur: ' + errorMessage)
+    showNotification('Erreur: ' + errorMessage, 'error')
   }
 }
 
 const confirmRefusal = async () => {
   if (!refuseReason.value.trim()) { 
-    alert('Veuillez indiquer une raison de refus')
+    showNotification('Veuillez indiquer une raison de refus', 'error')
     return 
   }
   
@@ -386,7 +421,7 @@ const confirmRefusal = async () => {
     console.log('Refus de la demande ID:', demandeId, 'Motif:', refuseReason.value)
     
     if (!demandeId) {
-      alert('Erreur: ID de demande manquant')
+      showNotification('Erreur: ID de demande manquant', 'error')
       return
     }
     
@@ -396,16 +431,16 @@ const confirmRefusal = async () => {
     )
     
     if (response.data.success) {
-      alert(response.data.message || 'Demande refusée avec succès !')
+      showNotification(response.data.message || 'Demande refusée avec succès !', 'success')
       closeRefuseModal()
       fetchDemandes()
     } else {
-      alert(response.data.message || 'Erreur lors du refus')
+      showNotification(response.data.message || 'Erreur lors du refus', 'error')
     }
   } catch (error) {
     console.error('Erreur lors du refus:', error)
     const errorMessage = error.response?.data?.message || error.message || 'Erreur lors du refus de la demande'
-    alert('Erreur: ' + errorMessage)
+    showNotification('Erreur: ' + errorMessage, 'error')
   }
 }
 
@@ -413,6 +448,37 @@ onMounted(fetchDemandes)
 </script>
 
 <style scoped>
+/* Notification Toast */
+.notification-toast {
+  position: fixed;
+  top: 90px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 9999;
+  animation: slideIn 0.3s ease-out;
+  border-left: 4px solid #e5e7eb;
+  max-width: 400px;
+}
+.notification-toast--success { border-left-color: #16a34a; }
+.notification-toast--error { border-left-color: #dc2626; }
+.notification-toast--info { border-left-color: #2563eb; }
+.notification-content { flex: 1; }
+.notification-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.2rem; color: #111827; }
+.notification-message { font-size: 0.875rem; color: #4b5563; }
+.notification-close { background: none; border: none; cursor: pointer; color: #9ca3af; padding: 0.25rem; }
+.notification-close:hover { color: #4b5563; }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
 /* Layout */
 .demandes-layout { 
   min-height: 100vh; 

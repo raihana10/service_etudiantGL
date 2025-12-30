@@ -432,6 +432,70 @@ class DemandesController extends Controller
 }
 
     /**
+     * Renvoyer une demande refusée
+     */
+    public function renvoyer($idDemande)
+    {
+        try {
+            $demande = Demande::findOrFail($idDemande);
+            
+            if ($demande->statut !== 'Refusée') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cette demande ne peut pas être renvoyée. Statut actuel: ' . $demande->statut
+                ], 400);
+            }
+
+            // Réinitialiser la demande au statut "En attente"
+            $demande->update([
+                'statut' => 'En attente',
+                'date_traitement' => null,
+                'motif_refus' => null,
+                'idAdmin' => null
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Demande renvoyée avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors du renvoi de la demande: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Visualiser un document (retourne le PDF)
+     */
+    public function visualiserDocument($idDemande)
+    {
+        try {
+            $demande = Demande::with(['etudiant.filiere', 'attestationscolarite', 'attestationreussite', 'relevenote', 'conventionstage'])
+                ->findOrFail($idDemande);
+
+            // Vérifier si la demande est validée ou refusée (permettre la visualisation pour les deux)
+            if ($demande->statut !== 'Validée' && $demande->statut !== 'Refusée') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ce document n\'est disponible que pour les demandes traitées (validées ou refusées)'
+                ], 400);
+            }
+
+            // Utiliser la méthode preview existante pour générer le PDF
+            return $this->preview($demande->num_demande);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la visualisation du document: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Mapper le type backend vers frontend
      */
     private function mapTypeToFrontend($type)

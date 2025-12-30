@@ -48,6 +48,8 @@ Route::prefix('admin/demandes')->group(function () {
     Route::get('/{num_demande}/download', [DemandesController::class, 'download']);
     Route::post('/{num_demande}/valider', [DemandesController::class, 'valider']);
     Route::post('/{num_demande}/refuser', [DemandesController::class, 'refuser']);
+    Route::post('/{idDemande}/renvoyer', [DemandesController::class, 'renvoyer']);
+    Route::get('/{idDemande}/document', [DemandesController::class, 'visualiserDocument']);
 });
 
 // Réclamations routes

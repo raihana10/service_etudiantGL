@@ -22,6 +22,14 @@
               <p class="dropdown-name">Administrateur</p>
               <p class="dropdown-email">{{ adminEmail }}</p>
             </div>
+            <div class="dropdown-actions">
+              <button @click="logout" class="logout-button">
+                <svg class="logout-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                Déconnexion
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -34,7 +42,7 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
 const showProfile = ref(false)
-const adminEmail = ref('admin@universite.ma')
+const adminEmail = ref('Chargement...')
 const loading = ref(true)
 
 const toggleProfile = () => {
@@ -48,29 +56,52 @@ const fetchAdminInfo = async () => {
     const token = localStorage.getItem('admin_token')
     if (!token) {
       console.log('Aucun token trouvé')
+      adminEmail.value = 'Non connecté'
       return
     }
 
-    // Récupérer l'email depuis le token ou faire un appel API
-    const response = await axios.get('http://localhost:8000/api/admin/profile', {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    // Essayer de récupérer l'email depuis localStorage d'abord (plus rapide)
+    const storedAdminInfo = localStorage.getItem('admin_info')
+    if (storedAdminInfo) {
+      try {
+        const adminInfo = JSON.parse(storedAdminInfo)
+        adminEmail.value = adminInfo.email || 'admin@universite.ma'
+      } catch (e) {
+        console.error('Erreur parsing admin info:', e)
+        adminEmail.value = 'admin@universite.ma'
       }
-    })
+    }
 
-    if (response.data.success) {
-      adminEmail.value = response.data.data.email
+    // Ensuite, faire un appel API pour vérifier et mettre à jour
+    try {
+      const response = await axios.get('http://localhost:8000/api/admin/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.data.success) {
+        adminEmail.value = response.data.data.email
+        // Mettre à jour localStorage avec les infos fraîches
+        localStorage.setItem('admin_info', JSON.stringify(response.data.data))
+      }
+    } catch (apiError) {
+      console.log('Erreur API profile, utilisation des données locales:', apiError)
+      // Garder l'email déjà récupéré depuis localStorage
     }
   } catch (error) {
-    console.log('Erreur lors de la récupération des infos admin:', error)
-    // En cas d'erreur, utiliser l'email stocké dans localStorage
-    const storedEmail = localStorage.getItem('admin_email')
-    if (storedEmail) {
-      adminEmail.value = storedEmail
-    }
+    console.error('Erreur lors de la récupération des infos admin:', error)
+    adminEmail.value = 'admin@universite.ma'
   } finally {
     loading.value = false
   }
+}
+
+// Déconnexion
+const logout = () => {
+  localStorage.removeItem('admin_token')
+  localStorage.removeItem('admin_info')
+  window.location.href = '/admin/login'
 }
 
 onMounted(() => {
@@ -196,6 +227,38 @@ document.addEventListener('click', (e) => {
   font-size: 0.75rem;
   color: #6b7280;
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.dropdown-actions {
+  padding: 0.5rem;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: none;
+  color: #dc2626;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.logout-button:hover {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+.logout-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
 }
 
 /* Responsive */

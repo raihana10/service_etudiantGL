@@ -690,7 +690,7 @@ onMounted(fetchDemandes)
 .info-panel > * + * { margin-top: 0.5rem; }
 
 .label { display: block; color: #374151; margin-bottom: 0.5rem; }
-.textarea { width: 100%; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #d1d5db; resize: none; }
+.textarea { width: 100%; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #d1d5db; resize: vertical; min-height: 50px; box-sizing: border-box; }
 
 /* Animations */
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

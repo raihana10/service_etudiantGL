@@ -78,7 +78,8 @@ const router = useRouter()
 
 const handleLogout = () => {
   // Logique de déconnexion
-  localStorage.removeItem('adminToken')
+  localStorage.removeItem('admin_token')
+  localStorage.removeItem('admin_info')
   router.push('/admin/login')
 }
 </script>

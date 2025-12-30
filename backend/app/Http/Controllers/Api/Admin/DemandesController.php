@@ -28,9 +28,9 @@ class DemandesController extends Controller
                     'success' => false,
                     'message' => 'Demande non trouvée'
                 ], 404)
-                ->header('Access-Control-Allow-Origin', '*')
-                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+                    ->header('Access-Control-Allow-Origin', '*')
+                    ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                    ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
             }
 
             return response()->json([
@@ -60,9 +60,9 @@ class DemandesController extends Controller
                     ] : null
                 ]
             ], 200)
-            ->header('Access-Control-Allow-Origin', '*')
-            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 
         } catch (\Exception $e) {
             return response()->json([
@@ -70,9 +70,9 @@ class DemandesController extends Controller
                 'message' => 'Erreur lors de la récupération des détails de la demande',
                 'error' => $e->getMessage()
             ], 500)
-            ->header('Access-Control-Allow-Origin', '*')
-            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
         }
     }
 
@@ -110,8 +110,8 @@ class DemandesController extends Controller
                 $search = $request->search;
                 $query->whereHas('etudiant', function ($q) use ($search) {
                     $q->where('nom', 'like', "%{$search}%")
-                      ->orWhere('prenom', 'like', "%{$search}%")
-                      ->orWhere('numApogee', 'like', "%{$search}%");
+                        ->orWhere('prenom', 'like', "%{$search}%")
+                        ->orWhere('numApogee', 'like', "%{$search}%");
                 });
             }
 
@@ -158,9 +158,9 @@ class DemandesController extends Controller
                     ]
                 ]
             ])
-            ->header('Access-Control-Allow-Origin', '*')
-            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 
         } catch (\Exception $e) {
             return response()->json([
@@ -178,7 +178,7 @@ class DemandesController extends Controller
         DB::beginTransaction();
         try {
             Log::info("Début validation demande #{$num_demande}");
-            
+
             $demande = Demande::with(['etudiant.filiere', 'attestationscolarite', 'attestationreussite', 'relevenote', 'conventionstage'])
                 ->where('num_demande', $num_demande)
                 ->firstOrFail();
@@ -192,15 +192,17 @@ class DemandesController extends Controller
 
             // Préparer données PDF (notes pour Relevé ou Attestation Réussite)
             $notes = [];
-            if (($demande->typeDoc === 'ReleveNote' && $demande->relevenote) || 
-                ($demande->typeDoc === 'AttestationReussite' && $demande->attestationreussite)) {
-                
-                $annee = ($demande->typeDoc === 'ReleveNote') 
-                    ? $demande->relevenote->annee 
+            if (
+                ($demande->typeDoc === 'ReleveNote' && $demande->relevenote) ||
+                ($demande->typeDoc === 'AttestationReussite' && $demande->attestationreussite)
+            ) {
+
+                $annee = ($demande->typeDoc === 'ReleveNote')
+                    ? $demande->relevenote->annee
                     : $demande->attestationreussite->anneeObtention;
-                    
+
                 $idEtudiant = $demande->idEtudiant;
-                
+
                 // Extraire l'année (4 chiffres) pour la recherche
                 $searchYear = $annee;
                 if (preg_match('/(\d{4})/', $annee, $matches)) {
@@ -227,14 +229,14 @@ class DemandesController extends Controller
             }
 
             $data = [
-                'demande'    => $demande,
-                'etudiant'   => $demande->etudiant,
-                'scolarite'  => $demande->attestationscolarite,
-                'reussite'   => $demande->attestationreussite,
-                'releve'     => $demande->relevenote,
+                'demande' => $demande,
+                'etudiant' => $demande->etudiant,
+                'scolarite' => $demande->attestationscolarite,
+                'reussite' => $demande->attestationreussite,
+                'releve' => $demande->relevenote,
                 'convention' => $demande->conventionstage,
-                'notes'      => $notes,
-                'now'        => now(),
+                'notes' => $notes,
+                'now' => now(),
             ];
 
             // Générer le PDF
@@ -250,7 +252,7 @@ class DemandesController extends Controller
                 // Mieux vaut peut-être échouer ici si le PDF est requis.
                 throw new \Exception("Erreur lors de la génération du PDF: " . $pdfError->getMessage());
             }
-            
+
             $typeLabel = $this->getTypeLabel($demande->typeDoc);
 
             // Mettre à jour la demande
@@ -276,7 +278,7 @@ class DemandesController extends Controller
                     // Nettoyer les parties du nom de fichier
                     $safeType = preg_replace('/[^A-Za-z0-9_\-]/u', '', str_replace(' ', '_', $typeLabel));
                     $safeNom = preg_replace('/[^A-Za-z0-9\-_]/', '', $etudiantNom);
-                    
+
                     $fileName = $safeType . '_' . $safeNom . '_' . $numDemande . '_' . now()->format('Y-m-d') . '.pdf';
 
                     Log::info("Envoi email à {$email} pour demande #{$num_demande} avec pièce jointe {$fileName}");
@@ -305,7 +307,7 @@ class DemandesController extends Controller
             DB::rollBack();
             Log::error("Erreur validation demande #{$num_demande}: " . $e->getMessage());
             Log::error($e->getTraceAsString());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de la validation: ' . $e->getMessage()
@@ -321,7 +323,7 @@ class DemandesController extends Controller
         DB::beginTransaction();
         try {
             Log::info("Début refus demande #{$num_demande}");
-            
+
             $request->validate([
                 'motif_refus' => 'required|string|max:1000'
             ]);
@@ -377,7 +379,7 @@ class DemandesController extends Controller
             DB::rollBack();
             Log::error("Erreur refus demande #{$num_demande}: " . $e->getMessage());
             Log::error($e->getTraceAsString());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors du refus: ' . $e->getMessage()
@@ -388,57 +390,61 @@ class DemandesController extends Controller
     /**
      * Obtenir les détails spécifiques d'une demande
      */
-   private function getDemandeDetails($demande)
-{
-    
-    switch ($demande->typeDoc) {
-        case 'AttestationScolarite':
-            // Charger les détails avec la relation
-            $detail = $demande->attestationscolarite()->first();
-            return $detail ? [
-                'filiere' => $demande->etudiant->filiere->nomF ?? 'N/A',
-                
-            ] : [];
+    private function getDemandeDetails($demande)
+    {
 
-        case 'AttestationReussite':
-            $detail = $demande->attestationreussite()->first();
-            return $detail ? [
-                'filiere' => $demande->etudiant->filiere->nomF ?? 'N/A',
-                'anneeUniversitaire' => $detail->anneeObtention ?? 'N/A',
-                'diplome' => $detail->diplomeConcernee ?? 'N/A',
-            ] : [];
+        switch ($demande->typeDoc) {
+            case 'AttestationScolarite':
+                // Charger les détails avec la relation
+                $detail = $demande->attestationscolarite()->first();
+                return $detail ? [
+                    'filiere' => $demande->etudiant->filiere->nomF ?? 'N/A',
 
-        case 'ReleveNote':
-            $detail = $demande->relevenote()->first();
-            return $detail ? [
-    
-                'anneeUniversitaire' => $detail->annee ?? 'N/A',
-            ] : [];
+                ] : [];
 
-        case 'ConventionStage':
-            $detail = $demande->conventionstage()->first();
-            return $detail ? [
-                'entreprise' => $detail->raisonSocialeEntreprise ?? 'N/A',
-                'ville' => $detail->villeEntreprise ?? 'N/A',
-                'periode' => ($detail->dateDebut && $detail->dateFin) ?
-                    $detail->dateDebut->format('d/m/Y') . ' → ' . $detail->dateFin->format('d/m/Y') : 'N/A',
-                'sujet' => $detail->sujetStage ?? 'N/A',
-                'encadrant_entreprise' => $detail->encadrantEntreprise ?? 'N/A',
-            ] : [];
+            case 'AttestationReussite':
+                $detail = $demande->attestationreussite()->first();
+                return $detail ? [
+                    'filiere' => $demande->etudiant->filiere->nomF ?? 'N/A',
+                    'anneeUniversitaire' => $detail->anneeObtention ?? 'N/A',
+                    'diplome' => $detail->diplomeConcernee ?? 'N/A',
+                ] : [];
 
-        default:
-            return [];
+            case 'ReleveNote':
+                $detail = $demande->relevenote()->first();
+                return $detail ? [
+
+                    'anneeUniversitaire' => $detail->annee ?? 'N/A',
+                ] : [];
+
+            case 'ConventionStage':
+                $detail = $demande->conventionstage()->first();
+                return $detail ? [
+                    'entreprise' => $detail->raisonSocialeEntreprise ?? 'N/A',
+                    'ville' => $detail->villeEntreprise ?? 'N/A',
+                    'periode' => ($detail->dateDebut && $detail->dateFin) ?
+                        $detail->dateDebut->format('d/m/Y') . ' → ' . $detail->dateFin->format('d/m/Y') : 'N/A',
+                    'sujet' => $detail->sujetStage ?? 'N/A',
+                    'encadrant_entreprise' => $detail->encadrantEntreprise ?? 'N/A',
+                ] : [];
+
+            default:
+                return [];
+        }
     }
-}
 
     /**
      * Renvoyer une demande refusée
      */
     public function renvoyer($idDemande)
     {
+        DB::beginTransaction();
         try {
-            $demande = Demande::findOrFail($idDemande);
-            
+            Log::info("Début renvoi (validation forcée) demande ID {$idDemande}");
+
+            $demande = Demande::with(['etudiant.filiere', 'attestationscolarite', 'attestationreussite', 'relevenote', 'conventionstage'])
+                ->findOrFail($idDemande);
+
             if ($demande->statut !== 'Refusée') {
                 return response()->json([
                     'success' => false,
@@ -446,20 +452,112 @@ class DemandesController extends Controller
                 ], 400);
             }
 
-            // Réinitialiser la demande au statut "En attente"
+            $num_demande = $demande->num_demande;
+
+            // Préparer données PDF (notes pour Relevé ou Attestation Réussite)
+            $notes = [];
+            if (
+                ($demande->typeDoc === 'ReleveNote' && $demande->relevenote) ||
+                ($demande->typeDoc === 'AttestationReussite' && $demande->attestationreussite)
+            ) {
+
+                $annee = ($demande->typeDoc === 'ReleveNote')
+                    ? $demande->relevenote->annee
+                    : $demande->attestationreussite->anneeObtention;
+
+                $idEtudiant = $demande->idEtudiant;
+
+                // Extraire l'année (4 chiffres) pour la recherche
+                $searchYear = $annee;
+                if (preg_match('/(\d{4})/', $annee, $matches)) {
+                    $searchYear = $matches[1];
+                }
+
+                $notes = DB::table('concerne as c')
+                    ->join('contient as ct', 'ct.idContient', '=', 'c.idContient')
+                    ->join('module as m', 'm.idM', '=', 'ct.idM')
+                    ->where('c.idEtudiant', $idEtudiant)
+                    ->where('c.annee', 'like', '%' . $searchYear . '%')
+                    ->select('m.code', 'm.nomM as module', 'c.note')
+                    ->orderBy('m.code')
+                    ->get()
+                    ->map(function ($row) {
+                        $note = is_null($row->note) ? null : floatval($row->note);
+                        return [
+                            'code' => $row->code ?? 'N/A',
+                            'module' => $row->module ?? 'N/A',
+                            'note' => $note,
+                            'resultat' => is_null($note) ? 'N/A' : ($note >= 10 ? 'Validé' : 'Non validé'),
+                        ];
+                    })->toArray();
+            }
+
+            $data = [
+                'demande' => $demande,
+                'etudiant' => $demande->etudiant,
+                'scolarite' => $demande->attestationscolarite,
+                'reussite' => $demande->attestationreussite,
+                'releve' => $demande->relevenote,
+                'convention' => $demande->conventionstage,
+                'notes' => $notes,
+                'now' => now(),
+            ];
+
+            // Générer le PDF
+            $pdfContent = null;
+            try {
+                Log::info("Génération du PDF pour demande #{$num_demande}");
+                $pdf = Pdf::loadView('pdf.demande', $data)->setPaper('a4');
+                $pdfContent = $pdf->output();
+            } catch (\Exception $pdfError) {
+                Log::error("Erreur génération PDF: " . $pdfError->getMessage());
+                throw new \Exception("Erreur lors de la génération du PDF: " . $pdfError->getMessage());
+            }
+
+            $typeLabel = $this->getTypeLabel($demande->typeDoc);
+
+            // Changer le statut en "Validée" (Validation forcée d'une demande précédemment refusée)
             $demande->update([
-                'statut' => 'En attente',
-                'date_traitement' => null,
+                'statut' => 'Validée',
+                'date_traitement' => now(),
                 'motif_refus' => null,
                 'idAdmin' => null
             ]);
 
+            DB::commit();
+            Log::info("Demande #{$num_demande} renvoyée et validée avec succès");
+
+            // Envoyer l'email
+            $email = optional($demande->etudiant)->emailInstitu;
+            if ($email) {
+                try {
+                    $etudiantNom = $demande->etudiant ? ($demande->etudiant->nom . '_' . $demande->etudiant->prenom) : 'etudiant';
+
+                    $safeType = preg_replace('/[^A-Za-z0-9_\-]/u', '', str_replace(' ', '_', $typeLabel));
+                    $safeNom = preg_replace('/[^A-Za-z0-9\-_]/', '', $etudiantNom);
+
+                    $fileName = $safeType . '_' . $safeNom . '_' . $num_demande . '_' . now()->format('Y-m-d') . '.pdf';
+
+                    Log::info("Envoi email à {$email} pour demande #{$num_demande}");
+                    $emailHtml = $this->renderEmailValidee($demande, $typeLabel, $fileName);
+                    Mail::send([], [], function ($message) use ($email, $typeLabel, $emailHtml, $pdfContent, $fileName) {
+                        $message->to($email)
+                            ->subject('Votre ' . $typeLabel . ' a été validée')
+                            ->html($emailHtml)
+                            ->attachData($pdfContent, $fileName, ['mime' => 'application/pdf']);
+                    });
+                } catch (\Exception $mailError) {
+                    Log::error("Erreur envoi email: " . $mailError->getMessage());
+                }
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => 'Demande renvoyée avec succès'
+                'message' => 'Demande validée et renvoyée avec succès'
             ]);
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors du renvoi de la demande: ' . $e->getMessage()
@@ -539,13 +637,13 @@ class DemandesController extends Controller
     /**
      * Rendu HTML stylisé pour l'email de validation
      */
-   private function renderEmailValidee($demande, $typeLabel, $fileName)
-{
-    $type = e($typeLabel);
-    $num = e($demande->num_demande);
-    $etudiantNom = $demande->etudiant ? e($demande->etudiant->prenom . ' ' . $demande->etudiant->nom) : 'Étudiant';
+    private function renderEmailValidee($demande, $typeLabel, $fileName)
+    {
+        $type = e($typeLabel);
+        $num = e($demande->num_demande);
+        $etudiantNom = $demande->etudiant ? e($demande->etudiant->prenom . ' ' . $demande->etudiant->nom) : 'Étudiant';
 
-    return <<<HTML
+        return <<<HTML
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -608,19 +706,19 @@ class DemandesController extends Controller
 </body>
 </html>
 HTML;
-}
+    }
 
-/**
- * Rendu HTML simple pour l'email de refus
- */
-private function renderEmailRefusee($demande, $typeLabel)
-{
-    $type = e($typeLabel);
-    $num = e($demande->num_demande);
-    $etudiantNom = $demande->etudiant ? e($demande->etudiant->prenom . ' ' . $demande->etudiant->nom) : 'Étudiant';
-    $motif = e($demande->motif_refus ?? 'Non spécifié');
+    /**
+     * Rendu HTML simple pour l'email de refus
+     */
+    private function renderEmailRefusee($demande, $typeLabel)
+    {
+        $type = e($typeLabel);
+        $num = e($demande->num_demande);
+        $etudiantNom = $demande->etudiant ? e($demande->etudiant->prenom . ' ' . $demande->etudiant->nom) : 'Étudiant';
+        $motif = e($demande->motif_refus ?? 'Non spécifié');
 
-    return <<<HTML
+        return <<<HTML
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -684,7 +782,7 @@ private function renderEmailRefusee($demande, $typeLabel)
 </body>
 </html>
 HTML;
-}
+    }
 
     /**
      * Prévisualiser une demande (générer HTML du document)
@@ -698,30 +796,32 @@ HTML;
 
             $map = [
                 'AttestationScolarite' => 'pdf.demande',
-                'AttestationReussite'  => 'pdf.demande',
-                'ReleveNote'           => 'pdf.demande',
-                'ConventionStage'      => 'pdf.demande',
+                'AttestationReussite' => 'pdf.demande',
+                'ReleveNote' => 'pdf.demande',
+                'ConventionStage' => 'pdf.demande',
             ];
             $view = $map[$demande->typeDoc] ?? 'pdf.demande';
 
             // Préparer les notes/modules pour Relevé ou Attestation Réussite si applicables
             $notes = [];
-            
-            if (($demande->typeDoc === 'ReleveNote' && $demande->relevenote) || 
-                ($demande->typeDoc === 'AttestationReussite' && $demande->attestationreussite)) {
-                
-                $annee = ($demande->typeDoc === 'ReleveNote') 
-                    ? $demande->relevenote->annee 
+
+            if (
+                ($demande->typeDoc === 'ReleveNote' && $demande->relevenote) ||
+                ($demande->typeDoc === 'AttestationReussite' && $demande->attestationreussite)
+            ) {
+
+                $annee = ($demande->typeDoc === 'ReleveNote')
+                    ? $demande->relevenote->annee
                     : $demande->attestationreussite->anneeObtention;
-                    
+
                 $idEtudiant = $demande->idEtudiant;
-                
+
                 // Extraire l'année (4 chiffres) pour la recherche
                 $searchYear = $annee;
                 if (preg_match('/(\d{4})/', $annee, $matches)) {
                     $searchYear = $matches[1];
                 }
-                
+
                 $notes = DB::table('concerne as c')
                     ->join('contient as ct', 'ct.idContient', '=', 'c.idContient')
                     ->join('module as m', 'm.idM', '=', 'ct.idM')
@@ -742,14 +842,14 @@ HTML;
             }
 
             $data = [
-                'demande'    => $demande,
-                'etudiant'   => $demande->etudiant,
-                'scolarite'  => $demande->attestationscolarite,
-                'reussite'   => $demande->attestationreussite,
-                'releve'     => $demande->relevenote,
+                'demande' => $demande,
+                'etudiant' => $demande->etudiant,
+                'scolarite' => $demande->attestationscolarite,
+                'reussite' => $demande->attestationreussite,
+                'releve' => $demande->relevenote,
                 'convention' => $demande->conventionstage,
-                'notes'      => $notes,
-                'now'        => now(),
+                'notes' => $notes,
+                'now' => now(),
             ];
 
             if (class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
@@ -759,7 +859,7 @@ HTML;
                 $typeLabel = $this->getTypeLabel($demande->typeDoc);
                 $etudiantNom = $demande->etudiant ? ($demande->etudiant->nom . '_' . $demande->etudiant->prenom) : 'etudiant';
                 $numDemande = $demande->num_demande;
-                
+
                 // Nettoyer les parties du nom de fichier
                 $safeType = preg_replace('/[^A-Za-z0-9_\-]/u', '', str_replace(' ', '_', $typeLabel));
                 $safeNom = preg_replace('/[^A-Za-z0-9\-_]/', '', $etudiantNom);
@@ -802,18 +902,20 @@ HTML;
 
             $map = [
                 'AttestationScolarite' => 'pdf.demande',
-                'AttestationReussite'  => 'pdf.demande',
-                'ReleveNote'           => 'pdf.demande',
-                'ConventionStage'      => 'pdf.demande',
+                'AttestationReussite' => 'pdf.demande',
+                'ReleveNote' => 'pdf.demande',
+                'ConventionStage' => 'pdf.demande',
             ];
             $view = $map[$demande->typeDoc] ?? 'pdf.demande';
 
             // Préparer les notes/modules si applicables
             $notes = [];
-            if (($demande->typeDoc === 'ReleveNote' && $demande->relevenote) || 
-                ($demande->typeDoc === 'AttestationReussite' && $demande->attestationreussite)) {
-                $annee = ($demande->typeDoc === 'ReleveNote') 
-                    ? $demande->relevenote->annee 
+            if (
+                ($demande->typeDoc === 'ReleveNote' && $demande->relevenote) ||
+                ($demande->typeDoc === 'AttestationReussite' && $demande->attestationreussite)
+            ) {
+                $annee = ($demande->typeDoc === 'ReleveNote')
+                    ? $demande->relevenote->annee
                     : $demande->attestationreussite->anneeObtention;
                 $idEtudiant = $demande->idEtudiant;
                 $searchYear = $annee;
@@ -840,14 +942,14 @@ HTML;
             }
 
             $data = [
-                'demande'    => $demande,
-                'etudiant'   => $demande->etudiant,
-                'scolarite'  => $demande->attestationscolarite,
-                'reussite'   => $demande->attestationreussite,
-                'releve'     => $demande->relevenote,
+                'demande' => $demande,
+                'etudiant' => $demande->etudiant,
+                'scolarite' => $demande->attestationscolarite,
+                'reussite' => $demande->attestationreussite,
+                'releve' => $demande->relevenote,
                 'convention' => $demande->conventionstage,
-                'notes'      => $notes,
-                'now'        => now(),
+                'notes' => $notes,
+                'now' => now(),
             ];
 
             $pdf = Pdf::loadView($view, $data)->setPaper('a4');

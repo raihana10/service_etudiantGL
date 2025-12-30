@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Mail;
+use ArPHP\I18N\Arabic;
 
 class DemandesController extends Controller
 {
@@ -235,6 +236,11 @@ class DemandesController extends Controller
                 'convention' => $demande->conventionstage,
                 'notes'      => $notes,
                 'now'        => now(),
+                'arabic'     => [
+                    'univ' => $this->fixArabic('جامعة عبد المالك السعدي'),
+                    'ecole' => $this->fixArabic('المدرسة الوطنية للعلوم التطبيقية بتطوان'),
+                    'annee' => $this->fixArabic('السنة الجامعية'),
+                ]
             ];
 
             // Générer le PDF
@@ -686,6 +692,11 @@ HTML;
                 'convention' => $demande->conventionstage,
                 'notes'      => $notes,
                 'now'        => now(),
+                'arabic'     => [
+                    'univ' => $this->fixArabic('جامعة عبد المالك السعدي'),
+                    'ecole' => $this->fixArabic('المدرسة الوطنية للعلوم التطبيقية بتطوان'),
+                    'annee' => $this->fixArabic('السنة الجامعية'),
+                ]
             ];
 
             if (class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
@@ -784,6 +795,11 @@ HTML;
                 'convention' => $demande->conventionstage,
                 'notes'      => $notes,
                 'now'        => now(),
+                'arabic'     => [
+                    'univ' => $this->fixArabic('جامعة عبد المالك السعدي'),
+                    'ecole' => $this->fixArabic('المدرسة الوطنية للعلوم التطبيقية بتطوان'),
+                    'annee' => $this->fixArabic('السنة الجامعية'),
+                ]
             ];
 
             $pdf = Pdf::loadView($view, $data)->setPaper('a4');
@@ -802,6 +818,19 @@ HTML;
                 'success' => false,
                 'message' => 'Erreur lors du téléchargement du document: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Corriger l'affichage de l'arabe pour Dompdf
+     */
+    private function fixArabic($text)
+    {
+        try {
+            $arabic = new Arabic();
+            return $arabic->utf8Glyphs($text);
+        } catch (\Exception $e) {
+            return $text;
         }
     }
 

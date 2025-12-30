@@ -131,7 +131,7 @@ const verifierEtudiant = async () => {
     }
   } catch (error) {
     if (error.response && error.response.status === 404) {
-      erreur.value = error.response.data.message || 'Les informations sont incorrectes, il faut vérifier vos données (email, N° Apogée, CIN)'
+      erreur.value = error.response.data.message || 'Informations incorrectes. Vérifiez vos données.'
     } else {
       erreur.value = 'Erreur de connexion au serveur'
     }
@@ -273,7 +273,7 @@ const soumettreDemande = async () => {
         erreur.value = error.response.data.message || 'Erreur de validation'
       }
     } else if (error.response && error.response.status === 404) {
-      erreur.value = error.response.data.message || 'Les informations sont incorrectes, il faut vérifier vos données (email, N° Apogée, CIN)'
+      erreur.value = error.response.data.message || 'Informations incorrectes. Vérifiez vos données.'
     } else {
       erreur.value = 'Erreur lors de la création de la ' + (estReclamation.value ? 'réclamation' : 'demande')
     }
@@ -364,14 +364,18 @@ const reinitialiserFormulaire = () => {
           </div>
         </transition>
 
-        <!-- Message d'erreur général -->
-        <transition name="fade">
-          <ErrorMessage v-if="erreur" :message="erreur" />
-        </transition>
-
         <!-- Section de vérification -->
         <div class="section">
           <h2 class="sous-titre">Identification</h2>
+          
+          <div style="margin-bottom: 15px;"></div>
+          
+          <!-- Message d'erreur général -->
+          <transition name="fade">
+            <ErrorMessage v-if="erreur" :message="erreur" />
+          </transition>
+          
+          <div style="margin-bottom: 20px;"></div>
           
           <div class="form-group">
             <label for="email">Adresse email institutionnelle</label>

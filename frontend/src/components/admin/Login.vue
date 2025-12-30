@@ -155,7 +155,7 @@ const handleSubmit = async () => {
       const errors = error.response.data.errors
       errorMessage.value = errors.email?.[0] || errors.password?.[0] || 'Erreur de validation'
     } else if (error.response?.status === 401) {
-      errorMessage.value = 'Email ou mot de passe incorrect'
+      errorMessage.value = 'Informations incorrectes. Vérifiez vos données.'
     } else {
       errorMessage.value = 'Erreur de connexion au serveur'
     }

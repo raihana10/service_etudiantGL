@@ -69,14 +69,6 @@ class Reclamation extends Model
     }
 
     /**
-     * Scope pour les réclamations nouvelles
-     */
-    public function scopeNouvelles($query)
-    {
-        return $query->where('statut', 'Nouvelle');
-    }
-
-    /**
      * Scope pour les réclamations en cours
      */
     public function scopeEnCours($query)

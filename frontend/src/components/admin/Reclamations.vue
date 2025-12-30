@@ -46,19 +46,7 @@
               </div>
             </div>
 
-            <div class="stat-card stat-card-orange">
-              <div class="stat-content">
-                <div class="stat-info">
-                  <p class="stat-label">Nouvelles</p>
-                  <p class="stat-value">{{ stats.nouvelles }}</p>
-                </div>
-                <div class="stat-icon stat-icon-orange">
-                  <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                  </svg>
-                </div>
-              </div>
-            </div>
+
 
             <div class="stat-card stat-card-yellow">
               <div class="stat-content">
@@ -193,20 +181,6 @@
                     class="action-btn primary-btn"
                   >
                     Répondre
-                  </button>
-                  <button 
-                    v-if="reclamation.statut === 'Nouvelle'"
-                    @click="updateStatus(reclamation.idReclamation, 'En cours')"
-                    class="action-btn warning-btn"
-                  >
-                    Marquer en cours
-                  </button>
-                  <button 
-                    v-if="reclamation.statut === 'En cours'"
-                    @click="updateStatus(reclamation.idReclamation, 'Résolue')"
-                    class="action-btn success-btn"
-                  >
-                    Marquer résolue
                   </button>
                 </div>
               </div>
@@ -411,11 +385,10 @@ export default {
       reclamations: [],
       stats: {
         total: 0,
-        nouvelles: 0,
         en_cours: 0,
         resolues: 0
       },
-      currentStatus: 'Toutes',
+      currentStatus: 'En cours',
       searchQuery: '',
       pagination: {
         current_page: 1,
@@ -423,10 +396,8 @@ export default {
         per_page: 10
       },
       statusTabs: [
-        { label: 'Toutes', value: 'Toutes' },
-        { label: 'Nouvelles', value: 'Nouvelle' },
         { label: 'En cours', value: 'En cours' },
-        { label: 'Résolues', value: 'Résolue' }
+        { label: 'Historique', value: 'Résolue' }
       ],
       showResponseModal: false,
       selectedReclamation: null,
@@ -581,7 +552,6 @@ export default {
 
     getStatusClass(status) {
       const classes = {
-        'Nouvelle': 'status-new',
         'En cours': 'status-in-progress',
         'Résolue': 'status-resolved'
       }

@@ -63,7 +63,7 @@ class ReclamationController extends Controller
     {
         // Require status, but make idAdmin optional in validation if we can get it from auth
         $validator = Validator::make($request->all(), [
-            'statut' => 'required|in:Nouvelle,En cours,Résolue',
+            'statut' => 'required|in:En cours,Résolue',
             'idAdmin' => 'nullable|exists:administrateur,idAdmin'
         ]);
 
@@ -167,7 +167,6 @@ class ReclamationController extends Controller
     {
         $stats = [
             'total' => Reclamation::count(),
-            'nouvelles' => Reclamation::where('statut', 'Nouvelle')->count(),
             'en_cours' => Reclamation::where('statut', 'En cours')->count(),
             'resolues' => Reclamation::where('statut', 'Résolue')->count(),
         ];

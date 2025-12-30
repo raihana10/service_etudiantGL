@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Demande;
+use App\Models\Reclamation;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -48,16 +49,82 @@ class DashboardController extends Controller
                 'backgroundColor' => '#4E7D96'
             ];
 
-            // Statistiques des 7 derniers jours
+            // Statistiques des 7 derniers jours (Demandes)
             $last7Days = [];
             $last7DaysLabels = [];
-            
+
+            // Statistiques des 7 derniers jours (Réclamations)
+            $last7DaysReclamations = [];
+
             for ($i = 6; $i >= 0; $i--) {
                 $date = Carbon::now()->subDays($i);
-                $count = Demande::whereDate('datesoumission', $date)->count();
-                $last7Days[] = $count;
+
+                // Demandes
+                $countDemandes = Demande::whereDate('datesoumission', $date)->count();
+                $last7Days[] = $countDemandes;
+
+                // Réclamations
+                $countReclamations = Reclamation::whereDate('datesoumission', $date)->count();
+                $last7DaysReclamations[] = $countReclamations;
+
                 $last7DaysLabels[] = $date->format('d/m');
             }
+
+            // Statistiques globales des réclamations
+            $reclamationStats = [
+                'total' => Reclamation::count(),
+                'enCours' => Reclamation::where('statut', 'En cours')->count(),
+                'resolues' => Reclamation::where('statut', 'Résolue')->count(),
+            ];
+
+            // Taux de résolution
+            $resolutionRate = $reclamationStats['total'] > 0
+                ? round(($reclamationStats['resolues'] / $reclamationStats['total']) * 100, 1)
+                : 0;
+
+            // Temps moyen de traitement (en heures)
+            $avgProcessingTime = Demande::whereNotNull('date_traitement')
+                ->select(DB::raw('AVG(TIMESTAMPDIFF(HOUR, datesoumission, date_traitement)) as avg_time'))
+                ->value('avg_time');
+
+            $avgProcessingTime = $avgProcessingTime ? round($avgProcessingTime, 1) : 0;
+
+            // Top 5 Étudiants actifs
+            $topStudents = Demande::select('idEtudiant', DB::raw('count(*) as total_demandes'))
+                ->with('etudiant')
+                ->when(true, function ($query) {
+                    // Check if column exists or just group by commonly used FK
+                    return $query->groupBy('idEtudiant');
+                })
+                ->orderByDesc('total_demandes')
+                ->limit(5)
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'nom' => $item->etudiant ? $item->etudiant->nom . ' ' . $item->etudiant->prenom : 'Inconnu',
+                        'numApogee' => $item->etudiant ? $item->etudiant->numApogee : '-',
+                        'count' => $item->total_demandes
+                    ];
+                });
+
+            // Données pour le graphique donut (répartition des réclamations)
+            $reclamationDonutData = [
+                'labels' => ['En cours', 'Résolues'],
+                'data' => [
+                    $reclamationStats['enCours'],
+                    $reclamationStats['resolues']
+                ],
+                'backgroundColor' => ['#FF844B', '#4E7D96'] // Orange for En cours, Blue for Résolues
+            ];
+
+            // Données pour le graphique en ligne (réclamations)
+            $lineChartData = [
+                'labels' => $last7DaysLabels,
+                'data' => $last7DaysReclamations,
+                'borderColor' => '#FF844B',
+                'backgroundColor' => 'rgba(255, 132, 75, 0.1)',
+                'fill' => true
+            ];
 
             // Demandes récentes (5 dernières)
             $recentDemandes = Demande::with(['etudiant'])
@@ -78,8 +145,16 @@ class DashboardController extends Controller
                 'success' => true,
                 'data' => [
                     'stats' => $stats,
+                    'reclamationStats' => $reclamationStats, // Add global reclamation stats
+                    'kpis' => [
+                        'resolutionRate' => $resolutionRate,
+                        'avgProcessingTime' => $avgProcessingTime
+                    ],
+                    'topStudents' => $topStudents,
                     'donutChart' => $donutData,
                     'barChart' => $barData,
+                    'reclamationDonut' => $reclamationDonutData, // Add reclamation donut data
+                    'lineChart' => $lineChartData,
                     'last7Days' => [
                         'labels' => $last7DaysLabels,
                         'data' => $last7Days
@@ -87,9 +162,9 @@ class DashboardController extends Controller
                     'recentDemandes' => $recentDemandes
                 ]
             ], 200)
-            ->header('Access-Control-Allow-Origin', '*')
-            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 
         } catch (\Exception $e) {
             return response()->json([
@@ -97,9 +172,9 @@ class DashboardController extends Controller
                 'message' => 'Erreur lors de la récupération des statistiques',
                 'error' => $e->getMessage()
             ], 500)
-            ->header('Access-Control-Allow-Origin', '*')
-            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
         }
     }
 
@@ -124,7 +199,7 @@ class DashboardController extends Controller
             // Pagination
             $page = $request->get('page', 1);
             $limit = $request->get('limit', 10);
-            
+
             $demandes = $query->orderBy('datesoumission', 'desc')
                 ->skip(($page - 1) * $limit)
                 ->take($limit)
@@ -162,9 +237,9 @@ class DashboardController extends Controller
                     ]
                 ]
             ], 200)
-            ->header('Access-Control-Allow-Origin', '*')
-            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 
         } catch (\Exception $e) {
             return response()->json([
@@ -172,9 +247,9 @@ class DashboardController extends Controller
                 'message' => 'Erreur lors de la récupération des demandes',
                 'error' => $e->getMessage()
             ], 500)
-            ->header('Access-Control-Allow-Origin', '*')
-            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
         }
     }
 
@@ -185,8 +260,8 @@ class DashboardController extends Controller
     {
         try {
             $period = $request->get('period', 'month'); // week, month, year
-            
-            $dateFormat = match($period) {
+
+            $dateFormat = match ($period) {
                 'week' => '%Y-%u',
                 'month' => '%Y-%m',
                 'year' => '%Y',
@@ -194,12 +269,12 @@ class DashboardController extends Controller
             };
 
             $stats = Demande::select(
-                    DB::raw("DATE_FORMAT(datesoumission, '$dateFormat') as period"),
-                    DB::raw('count(*) as total'),
-                    DB::raw("SUM(CASE WHEN statut = 'Validée' THEN 1 ELSE 0 END) as acceptees"),
-                    DB::raw("SUM(CASE WHEN statut = 'Refusée' THEN 1 ELSE 0 END) as refusees"),
-                    DB::raw("SUM(CASE WHEN statut = 'En attente' THEN 1 ELSE 0 END) as enAttente")
-                )
+                DB::raw("DATE_FORMAT(datesoumission, '$dateFormat') as period"),
+                DB::raw('count(*) as total'),
+                DB::raw("SUM(CASE WHEN statut = 'Validée' THEN 1 ELSE 0 END) as acceptees"),
+                DB::raw("SUM(CASE WHEN statut = 'Refusée' THEN 1 ELSE 0 END) as refusees"),
+                DB::raw("SUM(CASE WHEN statut = 'En attente' THEN 1 ELSE 0 END) as enAttente")
+            )
                 ->groupBy('period')
                 ->orderBy('period', 'asc')
                 ->get();
@@ -208,9 +283,9 @@ class DashboardController extends Controller
                 'success' => true,
                 'data' => $stats
             ], 200)
-            ->header('Access-Control-Allow-Origin', '*')
-            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 
         } catch (\Exception $e) {
             return response()->json([
@@ -218,9 +293,9 @@ class DashboardController extends Controller
                 'message' => 'Erreur lors de la récupération des statistiques détaillées',
                 'error' => $e->getMessage()
             ], 500)
-            ->header('Access-Control-Allow-Origin', '*')
-            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
         }
     }
 }

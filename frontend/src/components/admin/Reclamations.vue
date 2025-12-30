@@ -30,53 +30,6 @@
             <p>Gérez et répondez aux réclamations des étudiants</p>
           </div>
 
-          <!-- Statistics -->
-          <div class="stats-grid">
-            <div class="stat-card stat-card-blue">
-              <div class="stat-content">
-                <div class="stat-info">
-                  <p class="stat-label">Total Réclamations</p>
-                  <p class="stat-value">{{ stats.total }}</p>
-                </div>
-                <div class="stat-icon stat-icon-blue">
-                  <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-
-
-            <div class="stat-card stat-card-yellow">
-              <div class="stat-content">
-                <div class="stat-info">
-                  <p class="stat-label">En cours</p>
-                  <p class="stat-value">{{ stats.en_cours }}</p>
-                </div>
-                <div class="stat-icon stat-icon-yellow">
-                  <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div class="stat-card stat-card-green">
-              <div class="stat-content">
-                <div class="stat-info">
-                  <p class="stat-label">Résolues</p>
-                  <p class="stat-value">{{ stats.resolues }}</p>
-                </div>
-                <div class="stat-icon stat-icon-green">
-                  <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <!-- Filters and Search -->
           <div class="filters-section">
             <!-- Status tabs -->
@@ -383,11 +336,6 @@ export default {
       loading: false,
       error: null,
       reclamations: [],
-      stats: {
-        total: 0,
-        en_cours: 0,
-        resolues: 0
-      },
       currentStatus: 'En cours',
       searchQuery: '',
       pagination: {
@@ -410,7 +358,6 @@ export default {
   },
   mounted() {
     this.loadReclamations()
-    this.loadStatistics()
   },
   methods: {
     async loadReclamations() {
@@ -446,14 +393,6 @@ export default {
       }
     },
 
-    async loadStatistics() {
-      try {
-        const response = await api.get('/admin/reclamations/statistics')
-        this.stats = response.data.data
-      } catch (error) {
-        console.error('Error loading statistics:', error)
-      }
-    },
 
     setStatusFilter(status) {
       this.currentStatus = status
@@ -495,7 +434,6 @@ export default {
         })
 
         await this.loadReclamations()
-        await this.loadStatistics()
       } catch (error) {
         console.error('Error updating status:', error)
         this.error = 'Erreur lors de la mise à jour du statut'
@@ -539,7 +477,6 @@ export default {
         })
 
         await this.loadReclamations()
-        await this.loadStatistics()
         this.closeResponseModal()
       } catch (error) {
         console.error('Error sending response:', error)
@@ -695,72 +632,7 @@ export default {
   font-size: 16px;
 }
 
-/* Statistics grid */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
-}
 
-.stat-card {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-}
-
-.stat-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.stat-label {
-  color: #6b7280;
-  font-size: 14px;
-  margin-bottom: 4px;
-}
-
-.stat-value {
-  font-size: 32px;
-  font-weight: bold;
-  color: #0A0D25;
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stat-icon-blue {
-  background: #E3EDF2;
-  color: #4E7D96;
-}
-
-.stat-icon-orange {
-  background: #fff0e8;
-  color: #FF844B;
-}
-
-.stat-icon-yellow {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.stat-icon-green {
-  background: #e6e8eb;
-  color: #0A0D25;
-}
 
 /* Filters section */
 .filters-section {
@@ -1238,9 +1110,7 @@ export default {
     padding: 20px;
   }
 
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
+
 
   .filters-row {
     flex-direction: column;

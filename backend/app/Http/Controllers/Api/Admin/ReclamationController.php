@@ -114,7 +114,7 @@ class ReclamationController extends Controller
     public function respond(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'reponse' => 'required|string|min:10',
+            'reponse' => 'required|string|min:3',
             'idAdmin' => 'nullable|exists:administrateur,idAdmin'
         ]);
 

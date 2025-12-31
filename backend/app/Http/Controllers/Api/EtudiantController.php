@@ -69,7 +69,7 @@ class EtudiantController extends Controller
 
         try {
             $etudiant = Etudiant::find($request->idEtudiant);
-            
+
             if (!$etudiant) {
                 return response()->json([
                     'success' => false,
@@ -78,7 +78,7 @@ class EtudiantController extends Controller
             }
 
             $hasDiploma = !empty($etudiant->anneeObtentionDiplome);
-            
+
             return response()->json([
                 'success' => true,
                 'has_diploma' => $hasDiploma,
@@ -96,7 +96,7 @@ class EtudiantController extends Controller
     public function rechercherDemandeParNumero(Request $request)
     {
         \Log::info('Recherche de demande par numéro: ' . $request->num_demande);
-        
+
         $validator = Validator::make($request->all(), [
             'num_demande' => 'required|string',
         ]);
@@ -111,7 +111,7 @@ class EtudiantController extends Controller
 
         try {
             $demande = Demande::where('num_demande', $request->num_demande)->first();
-            
+
             if (!$demande) {
                 \Log::info('Demande non trouvée: ' . $request->num_demande);
                 return response()->json([
@@ -146,7 +146,7 @@ class EtudiantController extends Controller
     public function creerDemande(Request $request)
     {
         \Log::info('Création de demande - Données reçues: ' . json_encode($request->all()));
-        
+
         $validator = Validator::make($request->all(), [
             'idEtudiant' => 'required|integer|exists:etudiant,idEtudiant',
             'typeDoc' => 'required|in:AttestationScolarite,AttestationReussite,ReleveNote,ConventionStage',
@@ -168,13 +168,13 @@ class EtudiantController extends Controller
                 'typeDoc' => $request->typeDoc,
                 'informations' => $request->informations
             ]));
-            
+
             // Si c'est une attestation de réussite, vérifier l'année d'obtention AVANT de créer la demande
             if ($request->typeDoc === 'AttestationReussite') {
                 \Log::info('Vérification pour attestation de réussite pour l\'étudiant ID: ' . $request->idEtudiant);
-                
+
                 $etudiant = Etudiant::find($request->idEtudiant);
-                
+
                 if (!$etudiant || empty($etudiant->anneeObtentionDiplome)) {
                     \Log::info('L\'étudiant n\'a pas encore d\'année d\'obtention de diplôme');
                     return response()->json([
@@ -183,7 +183,7 @@ class EtudiantController extends Controller
                         'has_diploma' => false
                     ], 422);
                 }
-                
+
                 \Log::info('L\'étudiant a une année d\'obtention: ' . $etudiant->anneeObtentionDiplome);
             }
 
@@ -196,7 +196,7 @@ class EtudiantController extends Controller
             ]);
 
             \Log::info('Demande créée avec succès: ' . json_encode($demande));
-            
+
             // Générer un numéro de demande automatique
             $numDemande = $demande->num_demande;
             \Log::info('Numéro de demande généré: ' . $numDemande);
@@ -204,7 +204,7 @@ class EtudiantController extends Controller
             // Si c'est une convention de stage, créer l'enregistrement correspondant
             if ($request->typeDoc === 'ConventionStage' && $request->informations) {
                 \Log::info('Création de convention de stage pour la demande ID: ' . $demande->idDemande);
-                
+
                 $conventionStage = ConventionStage::create([
                     'idDemande' => $demande->idDemande,
                     'raisonSocialeEntreprise' => $request->informations['cosocialreason'] ?? null,
@@ -232,7 +232,7 @@ class EtudiantController extends Controller
             // Si c'est une attestation de scolarité, créer l'enregistrement correspondant automatiquement
             if ($request->typeDoc === 'AttestationScolarite') {
                 \Log::info('Création automatique d\'attestation de scolarité pour la demande ID: ' . $demande->idDemande);
-                
+
                 $attestationScolarite = AttestationScolarite::create([
                     'idDemande' => $demande->idDemande
                 ]);
@@ -243,9 +243,9 @@ class EtudiantController extends Controller
             // Si c'est une attestation de réussite, créer l'enregistrement correspondant
             if ($request->typeDoc === 'AttestationReussite') {
                 \Log::info('Création d\'attestation de réussite pour la demande ID: ' . $demande->idDemande);
-                
+
                 $etudiant = Etudiant::find($request->idEtudiant);
-                
+
                 $attestationReussite = AttestationReussite::create([
                     'idDemande' => $demande->idDemande,
                     'anneeObtention' => $etudiant->anneeObtentionDiplome,
@@ -258,7 +258,7 @@ class EtudiantController extends Controller
             // Si c'est un relevé de notes, créer l'enregistrement correspondant
             if ($request->typeDoc === 'ReleveNote' && $request->informations) {
                 \Log::info('Création de relevé de notes pour la demande ID: ' . $demande->idDemande);
-                
+
                 $releveNote = ReleveNote::create([
                     'idDemande' => $demande->idDemande,
                     'annee' => $request->informations['annee_universitaire'] ?? null
@@ -269,7 +269,7 @@ class EtudiantController extends Controller
 
             // Récupérer l'étudiant pour l'email
             $etudiant = Etudiant::find($request->idEtudiant);
-            
+
             // Envoyer l'email de confirmation simple avec numéro de demande
             try {
                 Mail::to($etudiant->emailInstitu)->send(new DemandeConfirmationMail($demande, $etudiant));
@@ -303,7 +303,7 @@ class EtudiantController extends Controller
     public function creerReclamation(Request $request)
     {
         \Log::info('Création de réclamation - Données reçues: ' . json_encode($request->all()));
-        
+
         $validator = Validator::make($request->all(), [
             'idEtudiant' => 'required|integer|exists:etudiant,idEtudiant',
             'sujet' => 'required|string|max:200',
@@ -325,12 +325,12 @@ class EtudiantController extends Controller
                 'sujet' => $request->sujet,
                 'description' => $request->description
             ]));
-            
+
             $reclamation = Reclamation::create([
                 'idEtudiant' => $request->idEtudiant,
                 'sujet' => $request->sujet,
                 'description' => $request->description,
-                'statut' => 'Nouvelle',
+                'statut' => 'En cours',
                 'datesoumission' => now()
             ]);
 

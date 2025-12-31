@@ -480,7 +480,17 @@ export default {
         this.closeResponseModal()
       } catch (error) {
         console.error('Error sending response:', error)
-        this.error = 'Erreur lors de l\'envoi de la réponse'
+        if (error.response && error.response.status === 422 && error.response.data.errors) {
+            // Construct a detailed error message from validation errors
+            const errors = error.response.data.errors
+            let errorMsg = 'Erreur de validation: '
+            for (const key in errors) {
+                errorMsg += `${errors[key].join(', ')} `
+            }
+            this.error = errorMsg
+        } else {
+            this.error = 'Erreur lors de l\'envoi de la réponse'
+        }
       } finally {
         this.sendingResponse = false
       }
